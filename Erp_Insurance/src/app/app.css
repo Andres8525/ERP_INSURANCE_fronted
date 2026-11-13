@@ -36,6 +36,14 @@
 .conflict-panel { animation: panel-in .2s ease-out both; }
 @keyframes panel-in { from { transform: translateX(24px); opacity: .6; } to { transform: translateX(0); opacity: 1; } }
 
-@media (min-width: 1024px) { .app-sidebar { transform: translateX(0); } }
+@media (min-width: 1024px) {
+  .app-sidebar { transform: translateX(0); }
+  /* Menú lateral colapsado a solo iconos (botón en la cabecera). */
+  .app-collapsed .app-sidebar { width: 4.5rem; }
+  .app-collapsed .app-sidebar .sidebar-label { display: none; }
+  .app-collapsed .app-sidebar .sidebar-brand { padding-inline: 1.125rem; }
+  .app-collapsed .app-sidebar .nav-link { justify-content: center; padding-inline: 0; }
+  .app-collapsed .app-main { padding-left: 4.5rem; }
+}
 @media (max-width: 639px) { .step-connector { left: calc(50% + 15px); width: calc(100% - 30px); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
