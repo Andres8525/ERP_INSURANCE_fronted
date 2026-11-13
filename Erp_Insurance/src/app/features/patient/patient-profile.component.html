@@ -1,255 +1,154 @@
-        <section aria-labelledby="patient-title">
-          <div class="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <p class="text-xs font-medium text-slate-500">
-                Gestión <span class="mx-1.5 text-slate-300">/</span> Perfil del asegurado
-              </p>
-              <h1
-                id="patient-title"
-                class="mt-1.5 text-[23px] font-semibold tracking-tight text-slate-900"
-              >
-                Perfil 360° del paciente
-              </h1>
+<section aria-labelledby="patients-title">
+  <div class="mb-6">
+    <p class="text-xs font-medium text-slate-500">Gestión <span class="mx-1.5 text-slate-300">/</span> Cartera de asegurados</p>
+    <h1 id="patients-title" class="mt-1.5 text-[23px] font-semibold tracking-tight text-slate-900">Pacientes</h1>
+    <p class="mt-1 text-[13px] text-slate-500">Datos demográficos, estado de cuenta, pólizas y siniestros de cada afiliado.</p>
+  </div>
+
+  <div class="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
+    <aside class="overflow-hidden rounded-lg border border-slate-200 bg-white xl:self-start">
+      <div class="border-b border-slate-100 p-3">
+        <input class="form-input" type="search" placeholder="Buscar por nombre o correo" aria-label="Buscar pacientes" [value]="query()" (input)="query.set($any($event.target).value)" />
+      </div>
+      <ul class="max-h-[60vh] divide-y divide-slate-100 overflow-y-auto">
+        @for (patient of filtered(); track patient.id) {
+          <li>
+            <button class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50" [class.bg-teal-50/60]="patient.id === selectedId()" (click)="select(patient.id)">
+              <span class="grid size-8 shrink-0 place-items-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-600">{{ fmt.initials(patient.firstName + ' ' + patient.lastName) }}</span>
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-[11px] font-medium text-slate-800">{{ patient.firstName }} {{ patient.lastName }}</span>
+                <span class="block truncate text-[9px] text-slate-400">{{ patient.email }}</span>
+              </span>
+              <span
+                class="rounded px-1.5 py-0.5 text-[9px] font-medium"
+                [class.bg-emerald-50]="patient.accountStatus === 'ACTIVE'" [class.text-emerald-700]="patient.accountStatus === 'ACTIVE'"
+                [class.bg-amber-50]="patient.accountStatus === 'PENDING'" [class.text-amber-700]="patient.accountStatus === 'PENDING'"
+                [class.bg-slate-100]="patient.accountStatus === 'INACTIVE'" [class.text-slate-500]="patient.accountStatus === 'INACTIVE'"
+              >{{ fmt.accountStatus(patient.accountStatus) }}</span>
+            </button>
+          </li>
+        } @empty {
+          <li class="px-4 py-8 text-center text-xs text-slate-500">{{ store.loading() ? 'Cargando…' : 'Sin resultados.' }}</li>
+        }
+      </ul>
+      <p class="border-t border-slate-100 px-4 py-2.5 text-[10px] text-slate-400">{{ store.patients().length }} pacientes · GET /api/patients</p>
+    </aside>
+
+    @if (selected(); as patient) {
+      <div class="space-y-5">
+        <section class="rounded-lg border border-slate-200 bg-white">
+          <div class="flex flex-col gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-4">
+              <span class="grid size-12 place-items-center rounded-full bg-[#e6edf7] text-sm font-semibold text-[#1e3a8a]">{{ fmt.initials(patient.firstName + ' ' + patient.lastName) }}</span>
+              <div>
+                <h2 class="text-base font-semibold text-slate-900">{{ patient.firstName }} {{ patient.lastName }}</h2>
+                <p class="mt-0.5 text-[11px] text-slate-500">{{ fmt.memberId(patient.id) }} · Alta {{ fmt.date(patient.createdAt) }}</p>
+              </div>
             </div>
-            <div class="flex gap-2">
-              <button
-                class="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  class="size-4"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                >
-                  <path d="M12 5v14M5 12h14" /></svg
-                >Registrar servicio</button
-              ><button
-                class="grid size-9 place-items-center rounded-md border border-slate-200 bg-white text-slate-600"
-                aria-label="Más acciones"
-              >
-                <svg viewBox="0 0 20 20" class="size-4" fill="currentColor">
-                  <circle cx="4" cy="10" r="1.3" />
-                  <circle cx="10" cy="10" r="1.3" />
-                  <circle cx="16" cy="10" r="1.3" />
-                </svg>
-              </button>
-            </div>
+            @if (!editing()) {
+              <div class="flex gap-2">
+                <button class="h-8 rounded-md border border-slate-200 px-3 text-[11px] font-semibold text-slate-700 hover:bg-slate-50" (click)="startEdit(patient)">Editar</button>
+                <button class="h-8 rounded-md border border-rose-200 px-3 text-[11px] font-semibold text-rose-700 hover:bg-rose-50" (click)="remove(patient)">Eliminar</button>
+              </div>
+            }
           </div>
-          <article class="rounded-lg border border-slate-200 bg-white">
-            <div
-              class="flex flex-col gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:px-7"
-            >
-              <div
-                class="grid size-14 place-items-center rounded-full bg-[#e6edf7] text-lg font-semibold text-[#1e3a8a]"
-              >
-                {{ patient.initials }}
+
+          @if (editing() && draft) {
+            <form class="grid gap-4 p-5 sm:grid-cols-2" (ngSubmit)="save(patient)">
+              <label class="form-label">Nombre<input class="form-input" name="firstName" required maxlength="100" [(ngModel)]="draft.firstName" /></label>
+              <label class="form-label">Apellido<input class="form-input" name="lastName" required maxlength="100" [(ngModel)]="draft.lastName" /></label>
+              <label class="form-label">Correo electrónico<input class="form-input" type="email" name="email" required [(ngModel)]="draft.email" /></label>
+              <label class="form-label">Teléfono<input class="form-input" name="phone" maxlength="32" [(ngModel)]="draft.phone" /></label>
+              <label class="form-label">Estado de cuenta
+                <select class="form-input" name="accountStatus" [(ngModel)]="draft.accountStatus">
+                  @for (status of accountStatuses; track status) { <option [value]="status">{{ fmt.accountStatus(status) }}</option> }
+                </select>
+              </label>
+              <label class="form-label">Elegibilidad ACA
+                <select class="form-input" name="acaEligibilityStatus" [(ngModel)]="draft.acaEligibilityStatus">
+                  @for (status of eligibilityStatuses; track status) { <option [value]="status">{{ fmt.eligibility(status) }}</option> }
+                </select>
+              </label>
+              <div class="flex justify-end gap-2 sm:col-span-2">
+                <button type="button" class="h-9 rounded-md px-3 text-xs font-medium text-slate-600 hover:bg-slate-100" (click)="editing.set(false)">Cancelar</button>
+                <button type="submit" class="h-9 rounded-md bg-teal-700 px-3.5 text-xs font-semibold text-white hover:bg-teal-800 disabled:opacity-60" [disabled]="saving()">{{ saving() ? 'Guardando…' : 'Guardar cambios' }}</button>
               </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <h2 class="text-lg font-semibold text-slate-900">{{ patient.fullName }}</h2>
-                  <span
-                    class="rounded bg-emerald-50 px-2 py-1 text-[9px] font-semibold text-emerald-700"
-                    >{{ patient.status === 'active' ? 'ACTIVA' : 'INACTIVA' }}</span
-                  >
-                </div>
-                <p class="mt-1 text-[11px] text-slate-500">
-                  ID de miembro <span class="font-mono text-slate-700">{{ patient.memberId }}</span
-                  ><span class="mx-2 text-slate-300">·</span>Desde {{ patient.enrolledAt }}
-                </p>
-                <p class="mt-1 text-[10px] text-slate-400">
-                  {{ patient.city }}, {{ patient.state }} · {{ patient.zipCode }}
-                  <span class="mx-1.5">·</span> {{ patient.phone }}
-                </p>
-              </div>
-              <div
-                class="grid grid-cols-2 gap-5 border-t border-slate-100 pt-3 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0"
-              >
-                <div>
-                  <p class="text-[9px] uppercase tracking-wide text-slate-400">Asesora asignada</p>
-                  <p class="mt-1 text-[11px] font-medium text-slate-700">
-                    {{ patient.assignedBroker }}
-                  </p>
-                </div>
-                <div>
-                  <p class="text-[9px] uppercase tracking-wide text-slate-400">
-                    Última actualización
-                  </p>
-                  <p class="mt-1 text-[11px] font-medium text-slate-700">
-                    {{ patient.lastUpdated }}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <nav class="flex gap-5 overflow-x-auto px-5 sm:px-7" aria-label="Secciones del perfil">
-              <button
-                class="profile-tab profile-tab-active whitespace-nowrap py-3 text-[11px] font-medium"
-              >
-                Resumen</button
-              ><button class="profile-tab whitespace-nowrap py-3 text-[11px] font-medium">
-                Póliza y cobertura</button
-              ><button class="profile-tab whitespace-nowrap py-3 text-[11px] font-medium">
-                Facturación</button
-              ><button class="profile-tab whitespace-nowrap py-3 text-[11px] font-medium">
-                Documentos
-              </button>
-            </nav>
-          </article>
-          <div class="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.75fr)]">
-            <div class="space-y-5">
-              <section class="rounded-lg border border-slate-200 bg-white p-5">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <div class="flex items-center gap-2">
-                      <span
-                        class="grid size-7 place-items-center rounded-md bg-teal-50 text-teal-700"
-                        ><svg
-                          viewBox="0 0 24 24"
-                          class="size-4"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="1.7"
-                        >
-                          <path d="M5 12h14M12 5v14" />
-                          <circle cx="12" cy="12" r="9" /></svg
-                      ></span>
-                      <h2 class="text-sm font-semibold text-slate-900">Póliza activa</h2>
-                    </div>
-                    <p class="ml-9 mt-1 text-[10px] text-slate-500">Cobertura médica individual</p>
-                  </div>
-                  <span
-                    class="rounded bg-emerald-50 px-2 py-1 text-[9px] font-semibold text-emerald-700"
-                    >VIGENTE</span
-                  >
-                </div>
-                <dl
-                  class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-slate-100 pt-4 sm:grid-cols-3"
-                >
-                  <div>
-                    <dt class="text-[9px] text-slate-400">Aseguradora</dt>
-                    <dd class="mt-1 text-[11px] font-medium text-slate-800">
-                      {{ patient.policy.insurer }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[9px] text-slate-400">Plan</dt>
-                    <dd class="mt-1 text-[11px] font-medium text-slate-800">
-                      {{ patient.policy.planName }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[9px] text-slate-400">ID de póliza</dt>
-                    <dd class="mt-1 font-mono text-[10px] font-medium text-slate-800">
-                      {{ patient.policy.policyId }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[9px] text-slate-400">Vigencia</dt>
-                    <dd class="mt-1 text-[11px] font-medium text-slate-800">
-                      {{ patient.policy.effectiveDate }} – {{ patient.policy.renewalDate }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[9px] text-slate-400">Prima mensual</dt>
-                    <dd class="mt-1 text-[11px] font-semibold tabular-nums text-slate-800">
-                      ${{ patient.policy.monthlyPremium.toFixed(2) }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[9px] text-slate-400">Deducible individual</dt>
-                    <dd class="mt-1 text-[11px] font-medium tabular-nums text-slate-800">
-                      ${{ patient.policy.deductibleMet.toLocaleString() }} /
-                      ${{ patient.policy.individualDeductible.toLocaleString() }}
-                    </dd>
-                  </div>
-                </dl>
-              </section>
-              <section class="rounded-lg border border-slate-200 bg-white">
-                <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-                  <div>
-                    <h2 class="text-sm font-semibold text-slate-900">Historial de facturación</h2>
-                    <p class="mt-1 text-[10px] text-slate-500">Últimos pagos de la póliza</p>
-                  </div>
-                  <button class="text-[10px] font-semibold text-[#1e3a8a]">Ver historial →</button>
-                </div>
-                <div class="overflow-x-auto">
-                  <table class="w-full min-w-107.5 text-left">
-                    <thead
-                      class="bg-slate-50 text-[9px] font-semibold uppercase tracking-wide text-slate-500"
-                    >
-                      <tr>
-                        <th class="px-5 py-2.5">Fecha</th>
-                        <th class="px-3 py-2.5">Concepto</th>
-                        <th class="px-3 py-2.5">Importe</th>
-                        <th class="px-5 py-2.5 text-right">Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                      @for (record of patient.billingRecords; track record.id) {
-                        <tr>
-                          <td class="px-5 py-3 text-[10px] text-slate-600">{{ record.date }}</td>
-                          <td class="px-3 py-3 text-[10px] text-slate-700">
-                            {{ record.description }}
-                          </td>
-                          <td class="px-3 py-3 text-[10px] font-medium tabular-nums text-slate-800">
-                            ${{ record.amount.toFixed(2) }}
-                          </td>
-                          <td class="px-5 py-3 text-right">
-                            <span
-                              class="rounded px-2 py-1 text-[9px] font-medium"
-                              [class.bg-emerald-50]="record.status === 'paid'"
-                              [class.text-emerald-700]="record.status === 'paid'"
-                              [class.bg-amber-50]="record.status === 'pending'"
-                              [class.text-amber-700]="record.status === 'pending'"
-                              [class.bg-rose-50]="record.status === 'overdue'"
-                              [class.text-rose-700]="record.status === 'overdue'"
-                            >{{ record.status === 'paid' ? 'Pagado' : record.status === 'pending' ? 'Pendiente' : 'Vencido' }}</span>
-                          </td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            </div>
-            <section class="rounded-lg border border-slate-200 bg-white p-5">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h2 class="text-sm font-semibold text-slate-900">Actividad del paciente</h2>
-                  <p class="mt-1 text-[10px] text-slate-500">Servicios y siniestros recientes</p>
-                </div>
-                <button class="text-[10px] font-semibold text-[#1e3a8a]">Ver todo</button>
-              </div>
-              <ol class="timeline mt-5 space-y-0">
-                @for (event of patient.timeline; track event.id) {
-                  <li class="timeline-item">
-                    <span
-                      class="timeline-dot"
-                      [class.bg-rose-500]="event.category === 'claim'"
-                      [class.bg-teal-600]="event.category === 'service'"
-                      [class.bg-blue-600]="event.category === 'coordination'"
-                      [class.bg-emerald-500]="event.category === 'billing'"
-                    ></span>
-                    <div class="pb-5">
-                      <div class="flex items-center justify-between gap-2">
-                        <p class="text-[11px] font-semibold text-slate-800">{{ event.title }}</p>
-                        <time class="shrink-0 text-[9px] text-slate-400">{{ event.date }}</time>
-                      </div>
-                      <p class="mt-1 text-[10px] text-slate-500">{{ event.description }}</p>
-                      @if (event.status) {
-                        <span
-                          class="mt-2 inline-block rounded px-2 py-1 text-[9px] font-medium"
-                          [class.bg-rose-50]="event.category === 'claim'"
-                          [class.text-rose-700]="event.category === 'claim'"
-                          [class.bg-emerald-50]="event.category !== 'claim'"
-                          [class.text-emerald-700]="event.category !== 'claim'"
-                          >{{ event.status }}</span
-                        >
-                      }
-                    </div>
-                  </li>
+            </form>
+          } @else {
+            <dl class="grid gap-4 p-5 text-[11px] sm:grid-cols-3">
+              <div><dt class="text-[9px] text-slate-400">Correo</dt><dd class="mt-1 break-all font-medium text-slate-700">{{ patient.email }}</dd></div>
+              <div><dt class="text-[9px] text-slate-400">Teléfono</dt><dd class="mt-1 font-medium text-slate-700">{{ patient.phone ?? '—' }}</dd></div>
+              <div><dt class="text-[9px] text-slate-400">Fecha de nacimiento</dt><dd class="mt-1 font-medium text-slate-700">{{ fmt.date(patient.dateOfBirth) }}</dd></div>
+              <div><dt class="text-[9px] text-slate-400">Ingreso del hogar</dt><dd class="mt-1 font-medium text-slate-700">{{ fmt.money(patient.householdIncome) }}</dd></div>
+              <div><dt class="text-[9px] text-slate-400">Estado de cuenta</dt><dd class="mt-1 font-medium text-slate-700">{{ fmt.accountStatus(patient.accountStatus) }}</dd></div>
+              <div><dt class="text-[9px] text-slate-400">Elegibilidad ACA</dt><dd class="mt-1 font-medium text-slate-700">{{ fmt.eligibility(patient.acaEligibilityStatus) }}</dd></div>
+            </dl>
+          }
+        </section>
+
+        @if (anomalies().length) {
+          <div class="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3">
+            <p class="text-[11px] font-semibold text-amber-900">{{ anomalies().length }} hallazgo(s) abiertos de auditoría IA</p>
+            <ul class="mt-1 space-y-0.5 text-[10px] text-amber-800">
+              @for (a of anomalies(); track a.id) { <li>{{ fmt.severity(a.severity) }} · {{ a.title ?? fmt.anomalyType(a.type) }}</li> }
+            </ul>
+          </div>
+        }
+
+        <section class="overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <div class="border-b border-slate-100 px-5 py-4">
+            <h3 class="text-sm font-semibold text-slate-900">Pólizas</h3>
+            <p class="mt-1 text-[10px] text-slate-500">Aseguradora, fechas de cobertura y prima</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-160 text-left">
+              <thead class="bg-slate-50 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                <tr><th class="px-5 py-2.5">Póliza</th><th class="px-3 py-2.5">Aseguradora / plan</th><th class="px-3 py-2.5">Cobertura</th><th class="px-3 py-2.5">Prima</th><th class="px-5 py-2.5">Estado</th></tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                @for (policy of policies(); track policy.id) {
+                  <tr>
+                    <td class="px-5 py-3 text-[10px] font-semibold text-[#1e3a8a]">{{ policy.policyNumber }}</td>
+                    <td class="px-3 py-3 text-[10px] text-slate-700">{{ policy.insurer }}<span class="block text-[9px] text-slate-400">{{ policy.planName ?? '' }}</span></td>
+                    <td class="px-3 py-3 text-[10px] text-slate-600">{{ fmt.date(policy.coverageStart) }} – {{ fmt.date(policy.coverageEnd) }}</td>
+                    <td class="px-3 py-3 text-[10px] tabular-nums text-slate-700">{{ fmt.money(policy.premiumAmount) }}</td>
+                    <td class="px-5 py-3 text-[10px]">
+                      <span class="font-medium text-slate-700">{{ fmt.policyStatus(policy.status) }}</span>
+                      @if (policy.hasAnomalies) { <span class="ml-1.5 rounded bg-rose-50 px-1.5 py-0.5 text-[9px] font-medium text-rose-700">Con hallazgos</span> }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="5" class="px-5 py-6 text-center text-xs text-slate-500">{{ policiesLoading() ? 'Cargando pólizas…' : policiesError() ?? 'Sin pólizas registradas.' }}</td></tr>
                 }
-              </ol>
-            </section>
+              </tbody>
+            </table>
           </div>
         </section>
+
+        <section class="rounded-lg border border-slate-200 bg-white">
+          <div class="border-b border-slate-100 px-5 py-4">
+            <h3 class="text-sm font-semibold text-slate-900">Siniestros</h3>
+            <p class="mt-1 text-[10px] text-slate-500">Historial de casos del asegurado</p>
+          </div>
+          <ul class="divide-y divide-slate-100">
+            @for (claim of claims(); track claim.id) {
+              <li class="flex items-center justify-between gap-3 px-5 py-3">
+                <div>
+                  <p class="text-[11px] font-medium text-slate-800"><span class="text-[#1e3a8a]">{{ claim.claimNumber }}</span> · {{ claim.description }}</p>
+                  <p class="mt-0.5 text-[9px] text-slate-400">{{ fmt.relative(claim.updatedAt) }}{{ claim.services.length ? ' · ' + claim.services.length + ' servicio(s)' : '' }}</p>
+                </div>
+                <span class="shrink-0 rounded bg-slate-100 px-2 py-1 text-[9px] font-medium text-slate-600">{{ fmt.claimStatus(claim.status) }}</span>
+              </li>
+            } @empty {
+              <li class="px-5 py-6 text-center text-xs text-slate-500">Sin siniestros registrados.</li>
+            }
+          </ul>
+        </section>
+      </div>
+    } @else {
+      <div class="grid place-items-center rounded-lg border border-dashed border-slate-300 bg-white/60 p-12 text-xs text-slate-500">
+        {{ store.loading() ? 'Cargando pacientes…' : 'Selecciona un paciente.' }}
+      </div>
+    }
+  </div>
+</section>
