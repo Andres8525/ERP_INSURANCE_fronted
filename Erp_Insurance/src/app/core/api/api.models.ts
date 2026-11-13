@@ -98,6 +98,9 @@ export interface CreatePolicyRequest {
   status?: PolicyStatus;
 }
 
+/** PUT/PATCH parcial de póliza: solo se modifican los campos enviados. */
+export type UpdatePolicyRequest = Partial<Omit<CreatePolicyRequest, 'policyNumber'>>;
+
 export interface PolicyResponse {
   id: Uuid;
   patientId: Uuid;

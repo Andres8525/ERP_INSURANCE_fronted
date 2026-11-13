@@ -10,6 +10,7 @@ import {
   PatientResponse,
   PolicyResponse,
   UpdatePatientRequest,
+  UpdatePolicyRequest,
   Uuid,
 } from './api.models';
 
@@ -47,5 +48,13 @@ export class PatientsApi {
 
   createPolicy(patientId: Uuid, request: CreatePolicyRequest): Observable<PolicyResponse> {
     return this.http.post<PolicyResponse>(`${this.baseUrl}/${patientId}/policies`, request);
+  }
+
+  updatePolicy(patientId: Uuid, policyId: Uuid, request: UpdatePolicyRequest): Observable<PolicyResponse> {
+    return this.http.put<PolicyResponse>(`${this.baseUrl}/${patientId}/policies/${policyId}`, request);
+  }
+
+  deletePolicy(patientId: Uuid, policyId: Uuid): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${patientId}/policies/${policyId}`);
   }
 }
