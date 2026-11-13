@@ -98,8 +98,9 @@ export const Fmt = {
 /** Mensaje legible a partir de un error HTTP (ProblemDetail de Spring o fallo de red). */
 export function apiErrorMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
-    if (error.status === 0) {
-      return `No se pudo conectar con el backend en ${environment.apiUrl}. Verifica que la API esté en ejecución.`;
+    // 0: sin respuesta (CORS/red). 502-504: el proxy de desarrollo no alcanza el backend.
+    if (error.status === 0 || error.status === 502 || error.status === 503 || error.status === 504) {
+      return `No se pudo conectar con el backend (${environment.apiUrl}). Verifica que la API esté en ejecución.`;
     }
     if (error.status === 401) return 'Sesión expirada o credenciales inválidas.';
     if (error.status === 403) return 'Tu rol no tiene permiso para esta acción.';
