@@ -48,6 +48,8 @@ export class ClaimsPageComponent {
   readonly fmt = Fmt;
   readonly columns = COLUMNS;
 
+  readonly priorityFilter = signal<'all' | ClaimPriority>('all');
+  readonly highPriorityCount = computed(() => this.store.allClaims().filter((c) => c.priority === 'HIGH').length);
   readonly dragging = signal<ClaimResponse | null>(null);
   readonly dropTarget = signal<ClaimStatus | null>(null);
   readonly movingId = signal<string | null>(null);
@@ -59,7 +61,9 @@ export class ClaimsPageComponent {
   draft: ClaimDraft = emptyDraft();
 
   claimsFor(status: ClaimStatus): ClaimResponse[] {
-    return this.store.pipeline()[status];
+    const filter = this.priorityFilter();
+    const claims = this.store.pipeline()[status];
+    return filter === 'all' ? claims : claims.filter((claim) => claim.priority === filter);
   }
 
   neighbour(status: ClaimStatus, step: 1 | -1): ClaimStatus | null {
