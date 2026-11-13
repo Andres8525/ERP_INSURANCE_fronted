@@ -1,59 +1,58 @@
-# ErpInsurance
+# ERP Insurance — Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.9.
+Interfaz Angular 21 + Tailwind CSS 4 del ERP para corredoras de seguros médicos ACA. Consume la API Spring Boot del repositorio [ERP_INSURANCE_backend](https://github.com/Andres8525/ERP_INSURANCE_backend).
 
-## Development server
+## Puesta en marcha
 
-To start a local development server, run:
+Requisitos: Node.js 20+ y el backend en ejecución (perfil demo).
 
-```bash
-ng serve
+```powershell
+npm install
+npm start                    # http://localhost:4200, backend en http://localhost:8080
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+En desarrollo la app llama a `/api` y [proxy.conf.mjs](proxy.conf.mjs) reenvía esas peticiones al backend. Si el puerto 8080 está ocupado (por ejemplo, por Jenkins), arranca el backend en otro puerto e indica el destino con `API_TARGET`:
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```powershell
+$env:API_TARGET = 'http://localhost:8081'; npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Cuentas demo (contraseña `NexoDemo2026!`): `admin@nexo.demo` (administrador), `auditor@nexo.demo` (auditor) y `agente@nexo.demo` (agente, sin acceso a auditoría). La pantalla de login tiene accesos rápidos.
 
-```bash
-ng generate --help
+## Vistas
+
+| Vista | Endpoints |
+| --- | --- |
+| Login | `POST /api/auth/login`, `GET /api/auth/me` (valida la sesión al recargar) |
+| Resumen | Métricas calculadas con pacientes, siniestros y anomalías |
+| Auditoría IA | `GET /api/audit/anomalies`, `GET /api/audit/summary`, `POST /api/audit/resolve-batch` |
+| Siniestros (Kanban) | `GET /api/claims/pipeline`, `POST/PUT/DELETE /api/claims`, `PATCH /api/claims/{id}/status` |
+| Afiliaciones (stepper) | `POST /api/patients`, `POST /api/patients/{id}/policies`, `POST /api/claims` |
+| Pacientes | `GET/PUT/DELETE /api/patients`, `GET/PUT/DELETE /api/patients/{id}/policies` |
+| Optimización nube | Datos ilustrativos (sin backend en el MVP) |
+
+## Estructura
+
+```text
+src/
+  environments/          apiUrl: '/api' en desarrollo, URL del backend en producción
+  app/
+    core/api/            api.models.ts (espejo de los DTOs Java) y clientes HTTP
+    core/auth/           AuthService (sesión JWT en sessionStorage) e interceptor Bearer
+    core/state/          ErpStore: estado compartido con signals (la app es zoneless)
+    core/ui/             Etiquetas en español, formato y mensajes de error de la API
+    features/            auth, overview, audit, claims, enrollment, patient, cloud
 ```
 
-## Building
+`api.models.ts` debe coincidir con los records del backend. El backend omite los campos `null` (`non_null`), por eso esos campos son opcionales (`?`) en TypeScript.
 
-To build the project run:
+## Pruebas y build
 
-```bash
-ng build
+```powershell
+npm test -- --watch=false    # Vitest: integración HTTP con HttpTestingController
+npm run build                # build de producción en dist/
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Despliegue
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Antes de `npm run build`, configura `apiUrl` en [src/environments/environment.ts](src/environments/environment.ts) con la URL pública del backend, y agrega el dominio del frontend en `FRONTEND_ORIGINS` del backend (CORS). [vercel.json](vercel.json) redirige todas las rutas a `index.html`.
