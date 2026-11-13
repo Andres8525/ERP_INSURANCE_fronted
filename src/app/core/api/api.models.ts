@@ -43,6 +43,9 @@ export interface LoginRequest {
   password: string;
 }
 
+/** POST /api/auth/register: crea una cuenta con rol AGENT. Contraseña de 12 a 128 caracteres. */
+export type RegisterRequest = LoginRequest;
+
 export interface TokenResponse {
   accessToken: string;
   tokenType: 'Bearer';

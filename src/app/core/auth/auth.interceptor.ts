@@ -16,8 +16,9 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(authorized).pipe(
     catchError((error: unknown) => {
-      const isLogin = request.url.endsWith('/auth/login');
-      if (error instanceof HttpErrorResponse && error.status === 401 && !isLogin) {
+      // En login/registro un 401 significa credenciales inválidas, no una sesión vencida.
+      const isAuthForm = request.url.endsWith('/auth/login') || request.url.endsWith('/auth/register');
+      if (error instanceof HttpErrorResponse && error.status === 401 && !isAuthForm) {
         auth.logout();
       }
       return throwError(() => error);

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LoginRequest, SessionResponse, TokenResponse, UserRole } from '../api/api.models';
+import { LoginRequest, RegisterRequest, SessionResponse, TokenResponse, UserRole } from '../api/api.models';
 
 const STORAGE_KEY = 'erp.session';
 
@@ -21,6 +21,13 @@ export class AuthService {
   login(request: LoginRequest): Observable<TokenResponse> {
     return this.http
       .post<TokenResponse>(`${environment.apiUrl}/auth/login`, request)
+      .pipe(tap((response) => this.store(response)));
+  }
+
+  /** Crea la cuenta (rol AGENT) y deja la sesión iniciada con el token devuelto. */
+  register(request: RegisterRequest): Observable<TokenResponse> {
+    return this.http
+      .post<TokenResponse>(`${environment.apiUrl}/auth/register`, request)
       .pipe(tap((response) => this.store(response)));
   }
 
