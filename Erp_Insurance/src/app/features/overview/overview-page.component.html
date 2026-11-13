@@ -2,8 +2,7 @@
           <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <p class="text-xs font-medium text-slate-500">
-                Sábado, 4 de octubre de 2026 <span class="mx-1.5 text-slate-300">/</span> Temporada
-                ACA 2027
+                {{ today }} <span class="mx-1.5 text-slate-300">/</span> Temporada ACA {{ nextYear }}
               </p>
               <h1
                 id="overview-title"
@@ -17,21 +16,6 @@
             </div>
             <div class="flex items-center gap-2">
               <button
-                class="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  class="size-4"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                >
-                  <path d="M8 3v3m8-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13H4V6a1 1 0 0 1 1-1Z" /></svg
-                >Oct 2026
-                <svg viewBox="0 0 20 20" class="size-3" fill="currentColor">
-                  <path d="m5 7 5 5 5-5" />
-                </svg></button
-              ><button
                 (click)="viewChange.emit('enrollment')"
                 class="inline-flex h-9 items-center gap-2 rounded-md bg-teal-700 px-3.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-800"
               >
@@ -67,16 +51,16 @@
                 ></span>
               </div>
               <p class="mt-3 text-[25px] font-semibold tracking-tight tabular-nums text-slate-900">
-                2,847
+                {{ metrics().active }}
               </p>
               <div class="mt-2 flex items-center gap-1.5 text-[10px]">
-                <span class="font-semibold text-emerald-700">↑ 8.2%</span
-                ><span class="text-slate-400">vs. mes anterior</span>
+                <span class="font-semibold text-emerald-700">{{ metrics().totalPatients }} registrados</span
+                ><span class="text-slate-400">en el sistema</span>
               </div>
             </article>
             <article class="metric-card rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-medium text-slate-500">Prima mensual</span
+                <span class="text-[11px] font-medium text-slate-500">Afiliaciones pendientes</span
                 ><span class="grid size-8 place-items-center rounded-md bg-teal-50 text-teal-700"
                   ><svg
                     viewBox="0 0 24 24"
@@ -90,11 +74,11 @@
                 ></span>
               </div>
               <p class="mt-3 text-[25px] font-semibold tracking-tight tabular-nums text-slate-900">
-                $684.2k
+                {{ metrics().pending }}
               </p>
               <div class="mt-2 flex items-center gap-1.5 text-[10px]">
-                <span class="font-semibold text-emerald-700">↑ 4.6%</span
-                ><span class="text-slate-400">cartera total</span>
+                <span class="font-semibold text-teal-700">{{ metrics().eligible }} elegibles ACA</span
+                ><span class="text-slate-400">verificados</span>
               </div>
             </article>
             <article class="metric-card rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
@@ -113,11 +97,11 @@
                 ></span>
               </div>
               <p class="mt-3 text-[25px] font-semibold tracking-tight tabular-nums text-slate-900">
-                38
+                {{ metrics().activeClaims }}
               </p>
               <div class="mt-2 flex items-center gap-1.5 text-[10px]">
-                <span class="font-semibold text-amber-700">8 requieren acción</span
-                ><span class="text-slate-400">hoy</span>
+                <span class="font-semibold text-amber-700">{{ metrics().highPriority }} prioridad alta</span
+                ><span class="text-slate-400">en curso</span>
               </div>
             </article>
             <article class="metric-card rounded-lg border border-rose-200 bg-white p-4 sm:p-5">
@@ -136,10 +120,10 @@
                 ></span>
               </div>
               <p class="mt-3 text-[25px] font-semibold tracking-tight tabular-nums text-slate-900">
-                12
+                {{ store.auditSummary()?.open ?? '—' }}
               </p>
               <div class="mt-2 flex items-center gap-1.5 text-[10px]">
-                <span class="font-semibold text-rose-700">3 críticas</span
+                <span class="font-semibold text-rose-700">{{ store.auditSummary()?.critical ?? 0 }} críticas</span
                 ><span class="text-slate-400">pendientes</span>
               </div>
             </article>
@@ -160,7 +144,7 @@
                     </h2>
                     <span
                       class="rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700"
-                      >12 pendientes</span
+                      >{{ counts().all }} pendientes</span
                     >
                   </div>
                   <p class="mt-1 text-[11px] text-slate-500">Hallazgos priorizados por Nexo AI</p>
@@ -174,25 +158,25 @@
               </div>
               <div class="flex flex-wrap items-center gap-2 px-4 py-3 sm:px-5">
                 <button
-                  (click)="filterChange.emit('all')"
+                  (click)="store.severityFilter.set('all')"
                   class="filter-chip rounded border px-2.5 py-1 text-[10px] font-medium"
-                  [class.filter-chip-active]="filterSeverity === 'all'"
+                  [class.filter-chip-active]="store.severityFilter() === 'all'"
                 >
-                  Todas <span class="ml-1 tabular-nums">12</span></button
+                  Todas <span class="ml-1 tabular-nums">{{ counts().all }}</span></button
                 ><button
-                  (click)="filterChange.emit('critical')"
+                  (click)="store.severityFilter.set('RED')"
                   class="filter-chip rounded border px-2.5 py-1 text-[10px] font-medium"
-                  [class.filter-chip-active]="filterSeverity === 'critical'"
+                  [class.filter-chip-active]="store.severityFilter() === 'RED'"
                 >
                   <span class="mr-1.5 inline-block size-1.5 rounded-full bg-rose-500"></span
-                  >Críticas <span class="ml-1 tabular-nums">3</span></button
+                  >Críticas <span class="ml-1 tabular-nums">{{ counts().RED }}</span></button
                 ><button
-                  (click)="filterChange.emit('review')"
+                  (click)="store.severityFilter.set('YELLOW')"
                   class="filter-chip rounded border px-2.5 py-1 text-[10px] font-medium"
-                  [class.filter-chip-active]="filterSeverity === 'review'"
+                  [class.filter-chip-active]="store.severityFilter() === 'YELLOW'"
                 >
                   <span class="mr-1.5 inline-block size-1.5 rounded-full bg-amber-500"></span
-                  >Revisión sugerida <span class="ml-1 tabular-nums">9</span></button
+                  >Revisión sugerida <span class="ml-1 tabular-nums">{{ counts().YELLOW }}</span></button
                 ><span class="ml-auto hidden items-center gap-1 text-[10px] text-slate-400 sm:flex"
                   ><svg
                     viewBox="0 0 20 20"
@@ -219,45 +203,45 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100">
-                    @for (anomaly of visibleAnomalies.slice(0, 4); track anomaly.id) {
+                    @for (anomaly of store.visibleAnomalies().slice(0, 4); track anomaly.id) {
                       <tr class="table-row cursor-pointer" (click)="anomalySelected.emit(anomaly)">
                         <td class="px-5 py-3">
                           <div class="flex items-center gap-2.5">
                             <span
                               class="grid size-7 shrink-0 place-items-center rounded-full bg-slate-100 text-[9px] font-semibold text-slate-600"
-                              >{{ anomaly.initials }}</span
+                              >{{ fmt.initials(anomaly.patient?.fullName) }}</span
                             >
                             <div>
                               <p class="whitespace-nowrap text-[11px] font-medium text-slate-800">
-                                {{ anomaly.member }}
+                                {{ anomaly.patient?.fullName ?? 'Sin paciente' }}
                               </p>
-                              <p class="mt-0.5 text-[9px] text-slate-400">{{ anomaly.id }}</p>
+                              <p class="mt-0.5 text-[9px] text-slate-400">{{ fmt.memberId(anomaly.id) }}</p>
                             </div>
                           </div>
                         </td>
                         <td class="px-3 py-3">
                           <p class="whitespace-nowrap text-[11px] font-medium text-slate-700">
-                            {{ anomaly.issue }}
+                            {{ anomaly.title ?? fmt.anomalyType(anomaly.type) }}
                           </p>
                           <p class="mt-0.5 whitespace-nowrap text-[9px] text-slate-400">
-                            {{ anomaly.detail }}
+                            {{ anomaly.source ?? '' }}{{ anomaly.confidence !== undefined ? ' · ' + anomaly.confidence + '% confianza' : '' }}
                           </p>
                         </td>
                         <td class="px-3 py-3">
                           <span
                             class="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[9px] font-semibold"
-                            [class.badge-critical]="anomaly.severity === 'critical'"
-                            [class.badge-review]="anomaly.severity === 'review'"
+                            [class.badge-critical]="anomaly.severity === 'RED'"
+                            [class.badge-review]="anomaly.severity === 'YELLOW'"
                             ><span
                               class="size-1.5 rounded-full"
-                              [class.bg-rose-500]="anomaly.severity === 'critical'"
-                              [class.bg-amber-500]="anomaly.severity === 'review'"
+                              [class.bg-rose-500]="anomaly.severity === 'RED'"
+                              [class.bg-amber-500]="anomaly.severity === 'YELLOW'"
                             ></span
-                            >{{ anomaly.severity === 'critical' ? 'Crítica' : 'Revisar' }}</span
+                            >{{ fmt.severity(anomaly.severity) }}</span
                           >
                         </td>
                         <td class="whitespace-nowrap px-3 py-3 text-[10px] text-slate-500">
-                          {{ anomaly.date }}
+                          {{ fmt.relative(anomaly.createdAt) }}
                         </td>
                         <td class="px-5 py-3 text-right">
                           <button
@@ -271,7 +255,7 @@
                     } @empty {
                       <tr>
                         <td colspan="5" class="px-5 py-8 text-center text-xs text-slate-500">
-                          No hay anomalías para este filtro.
+                          {{ auth.canAudit() ? 'No hay anomalías para este filtro.' : 'Tu rol no tiene acceso a la auditoría IA.' }}
                         </td>
                       </tr>
                     }
@@ -280,8 +264,8 @@
               </div>
               <div class="flex items-center justify-between border-t border-slate-100 px-5 py-3">
                 <span class="text-[10px] text-slate-400"
-                  >Mostrando {{ visibleAnomalies.length > 4 ? 4 : visibleAnomalies.length }} de
-                  {{ visibleAnomalies.length }} registros</span
+                  >Mostrando {{ store.visibleAnomalies().length > 4 ? 4 : store.visibleAnomalies().length }} de
+                  {{ store.visibleAnomalies().length }} registros</span
                 ><button
                   (click)="viewChange.emit('audit')"
                   class="text-[10px] font-semibold text-[#1e3a8a] hover:underline"
@@ -346,10 +330,10 @@
                     ></span>
                     <div>
                       <p class="text-[11px] font-semibold text-amber-900">
-                        Oportunidad de retención
+                        Prioridad de calidad de datos
                       </p>
                       <p class="mt-1 text-[10px] leading-relaxed text-amber-800">
-                        17 pólizas muestran riesgo de cancelación antes del próximo ciclo.
+                        {{ counts().RED }} hallazgos críticos abiertos pueden afectar renovaciones y facturación.
                       </p>
                       <button
                         class="mt-2 text-[10px] font-semibold text-amber-900 underline underline-offset-2"
@@ -363,23 +347,23 @@
                 <div>
                   <div class="mb-1.5 flex items-center justify-between text-[10px]">
                     <span class="font-medium text-slate-600">Calidad de datos</span
-                    ><span class="font-semibold tabular-nums text-slate-800">96.8%</span>
+                    ><span class="font-semibold tabular-nums text-slate-800">{{ quality() }}%</span>
                   </div>
                   <div class="h-1.5 overflow-hidden rounded-full bg-slate-100">
-                    <div class="h-full w-[96.8%] rounded-full bg-teal-600"></div>
+                    <div class="h-full rounded-full bg-teal-600" [style.width.%]="quality()"></div>
                   </div>
-                  <p class="mt-1.5 text-[9px] text-slate-400">+2.4% respecto a la semana pasada</p>
+                  <p class="mt-1.5 text-[9px] text-slate-400">Pacientes sin hallazgos abiertos</p>
                 </div>
                 <div class="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
                   <div>
                     <p class="text-[9px] text-slate-500">Casos resueltos por IA</p>
-                    <p class="mt-1 text-lg font-semibold tabular-nums text-slate-900">184</p>
+                    <p class="mt-1 text-lg font-semibold tabular-nums text-slate-900">{{ store.auditSummary()?.resolvedThisMonth ?? 0 }}</p>
                     <p class="text-[9px] text-emerald-700">este mes</p>
                   </div>
                   <div>
-                    <p class="text-[9px] text-slate-500">Tiempo ahorrado</p>
-                    <p class="mt-1 text-lg font-semibold tabular-nums text-slate-900">26.5 h</p>
-                    <p class="text-[9px] text-slate-400">en tareas manuales</p>
+                    <p class="text-[9px] text-slate-500">Hallazgos abiertos</p>
+                    <p class="mt-1 text-lg font-semibold tabular-nums text-slate-900">{{ store.auditSummary()?.open ?? 0 }}</p>
+                    <p class="text-[9px] text-slate-400">por decidir</p>
                   </div>
                 </div>
               </div>
@@ -396,7 +380,7 @@
                   <h2 id="claims-overview" class="text-sm font-semibold text-slate-900">
                     Actividad de siniestros
                   </h2>
-                  <p class="mt-1 text-[10px] text-slate-500">Volumen de casos · últimos 7 días</p>
+                  <p class="mt-1 text-[10px] text-slate-500">Volumen de casos · últimos 7 días (ilustrativo)</p>
                 </div>
                 <button
                   (click)="viewChange.emit('claims')"
@@ -473,7 +457,7 @@
                   <h2 id="cloud-overview" class="text-sm font-semibold text-slate-900">
                     Almacenamiento
                   </h2>
-                  <p class="mt-1 text-[10px] text-slate-500">Uso de expedientes en la nube</p>
+                  <p class="mt-1 text-[10px] text-slate-500">Uso de expedientes en la nube (ilustrativo)</p>
                 </div>
                 <button (click)="viewChange.emit('cloud')" class="text-[10px] font-semibold text-[#1e3a8a]">
                   Gestionar →
