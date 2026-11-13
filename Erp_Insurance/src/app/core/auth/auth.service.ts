@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LoginRequest, TokenResponse, UserRole } from '../api/api.models';
+import { LoginRequest, SessionResponse, TokenResponse, UserRole } from '../api/api.models';
 
 const STORAGE_KEY = 'erp.session';
 
@@ -22,6 +22,19 @@ export class AuthService {
     return this.http
       .post<TokenResponse>(`${environment.apiUrl}/auth/login`, request)
       .pipe(tap((response) => this.store(response)));
+  }
+
+  /**
+   * Confirma con el backend que el token guardado sigue siendo válido (p. ej. tras recargar la página)
+   * y sincroniza email/rol. Un 401 lo resuelve el interceptor cerrando la sesión.
+   */
+  verifySession(): Observable<SessionResponse> {
+    return this.http.get<SessionResponse>(`${environment.apiUrl}/auth/me`).pipe(
+      tap((me) => {
+        const current = this.session();
+        if (current) this.store({ ...current, email: me.email, role: me.role, expiresAt: me.expiresAt });
+      }),
+    );
   }
 
   logout(): void {

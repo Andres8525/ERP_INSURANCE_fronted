@@ -51,6 +51,13 @@ export interface TokenResponse {
   role: UserRole;
 }
 
+/** GET /api/auth/me */
+export interface SessionResponse {
+  email: string;
+  role: UserRole;
+  expiresAt: IsoInstant;
+}
+
 // ---- patients/PatientDtos.java ----------------------------------------------
 export interface CreatePatientRequest {
   firstName: string;
