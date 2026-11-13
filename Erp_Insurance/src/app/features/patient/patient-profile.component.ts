@@ -6,6 +6,7 @@ import {
   AcaEligibilityStatus,
   PatientResponse,
   PolicyResponse,
+  PolicyStatus,
   UpdatePatientRequest,
 } from '../../core/api/api.models';
 import { PatientsApi } from '../../core/api/patients.api';
@@ -42,6 +43,8 @@ export class PatientProfileComponent {
 
   readonly accountStatuses: AccountStatus[] = ['ACTIVE', 'PENDING', 'INACTIVE'];
   readonly eligibilityStatuses: AcaEligibilityStatus[] = ['UNKNOWN', 'PENDING', 'ELIGIBLE', 'INELIGIBLE'];
+  readonly policyStatuses: PolicyStatus[] = ['PENDING', 'ACTIVE', 'TERMINATED'];
+  readonly policyBusy = signal<string | null>(null);
 
   readonly filtered = computed(() => {
     const q = this.query().trim().toLowerCase();
@@ -85,6 +88,29 @@ export class PatientProfileComponent {
     } finally {
       this.policiesLoading.set(false);
     }
+  }
+
+  /** PUT /api/patients/{id}/policies/{policyId}: el backend rechaza (409) si la vigencia se solapa. */
+  async changePolicyStatus(policy: PolicyResponse, status: PolicyStatus): Promise<void> {
+    if (policy.status === status || this.policyBusy()) return;
+    this.policyBusy.set(policy.id);
+    await this.store.run(async () => {
+      await firstValueFrom(this.patientsApi.updatePolicy(policy.patientId, policy.id, { status }));
+      return `Póliza ${policy.policyNumber}: ${this.fmt.policyStatus(status).toLowerCase()}.`;
+    });
+    this.policyBusy.set(null);
+    await this.loadPolicies(policy.patientId);
+  }
+
+  async deletePolicy(policy: PolicyResponse): Promise<void> {
+    if (!confirm(`¿Eliminar la póliza ${policy.policyNumber}?`)) return;
+    this.policyBusy.set(policy.id);
+    await this.store.run(async () => {
+      await firstValueFrom(this.patientsApi.deletePolicy(policy.patientId, policy.id));
+      return `Póliza ${policy.policyNumber} eliminada.`;
+    });
+    this.policyBusy.set(null);
+    await this.loadPolicies(policy.patientId);
   }
 
   startEdit(patient: PatientResponse): void {

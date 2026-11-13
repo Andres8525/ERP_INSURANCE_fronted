@@ -103,7 +103,7 @@
           <div class="overflow-x-auto">
             <table class="w-full min-w-160 text-left">
               <thead class="bg-slate-50 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                <tr><th class="px-5 py-2.5">Póliza</th><th class="px-3 py-2.5">Aseguradora / plan</th><th class="px-3 py-2.5">Cobertura</th><th class="px-3 py-2.5">Prima</th><th class="px-5 py-2.5">Estado</th></tr>
+                <tr><th class="px-5 py-2.5">Póliza</th><th class="px-3 py-2.5">Aseguradora / plan</th><th class="px-3 py-2.5">Cobertura</th><th class="px-3 py-2.5">Prima</th><th class="px-3 py-2.5">Estado</th><th class="px-5 py-2.5 text-right">Acción</th></tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
                 @for (policy of policies(); track policy.id) {
@@ -112,13 +112,26 @@
                     <td class="px-3 py-3 text-[10px] text-slate-700">{{ policy.insurer }}<span class="block text-[9px] text-slate-400">{{ policy.planName ?? '' }}</span></td>
                     <td class="px-3 py-3 text-[10px] text-slate-600">{{ fmt.date(policy.coverageStart) }} – {{ fmt.date(policy.coverageEnd) }}</td>
                     <td class="px-3 py-3 text-[10px] tabular-nums text-slate-700">{{ fmt.money(policy.premiumAmount) }}</td>
-                    <td class="px-5 py-3 text-[10px]">
-                      <span class="font-medium text-slate-700">{{ fmt.policyStatus(policy.status) }}</span>
+                    <td class="px-3 py-3 text-[10px]">
+                      <select
+                        class="rounded border border-slate-200 bg-white px-1.5 py-1 text-[10px] font-medium text-slate-700 disabled:opacity-50"
+                        [attr.aria-label]="'Estado de la póliza ' + policy.policyNumber"
+                        [disabled]="policyBusy() === policy.id"
+                        [value]="policy.status"
+                        (change)="changePolicyStatus(policy, $any($event.target).value)"
+                      >
+                        @for (status of policyStatuses; track status) {
+                          <option [value]="status" [selected]="status === policy.status">{{ fmt.policyStatus(status) }}</option>
+                        }
+                      </select>
                       @if (policy.hasAnomalies) { <span class="ml-1.5 rounded bg-rose-50 px-1.5 py-0.5 text-[9px] font-medium text-rose-700">Con hallazgos</span> }
+                    </td>
+                    <td class="px-5 py-3 text-right">
+                      <button class="text-[10px] font-semibold text-rose-700 hover:underline disabled:opacity-50" [disabled]="policyBusy() === policy.id" (click)="deletePolicy(policy)">Eliminar</button>
                     </td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="5" class="px-5 py-6 text-center text-xs text-slate-500">{{ policiesLoading() ? 'Cargando pólizas…' : policiesError() ?? 'Sin pólizas registradas.' }}</td></tr>
+                  <tr><td colspan="6" class="px-5 py-6 text-center text-xs text-slate-500">{{ policiesLoading() ? 'Cargando pólizas…' : policiesError() ?? 'Sin pólizas registradas.' }}</td></tr>
                 }
               </tbody>
             </table>
