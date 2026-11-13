@@ -105,7 +105,11 @@ export function apiErrorMessage(error: unknown): string {
     if (error.status === 401) return 'Sesión expirada o credenciales inválidas.';
     if (error.status === 403) return 'Tu rol no tiene permiso para esta acción.';
     const problem = error.error as Partial<ProblemDetail> | null;
-    if (problem && typeof problem === 'object' && problem.detail) return problem.detail;
+    if (problem && typeof problem === 'object') {
+      const fields = Object.entries(problem.errors ?? {}).map(([field, message]) => `${field}: ${message}`);
+      if (fields.length) return `${problem.detail ?? 'Datos inválidos'} — ${fields.join('; ')}`;
+      if (problem.detail) return problem.detail;
+    }
     return `Error ${error.status} al comunicarse con el backend.`;
   }
   return 'Error inesperado.';

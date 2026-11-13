@@ -237,4 +237,6 @@ export interface ProblemDetail {
   status: number;
   detail?: string;
   instance?: string;
+  /** Errores por campo (validación del cuerpo o de parámetros): campo -> mensaje. */
+  errors?: Record<string, string>;
 }
