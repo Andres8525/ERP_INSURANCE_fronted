@@ -1,6 +1,7 @@
-// Configuración de producción (ng build). Cambia apiUrl por la URL pública del backend al desplegar
-// y agrega ese origen del frontend en FRONTEND_ORIGINS del backend.
+// Configuración de producción (ng build / Vercel).
+// La API está desplegada en Render; su FRONTEND_ORIGINS debe incluir el dominio de Vercel
+// (p. ej. https://<proyecto>.vercel.app,https://*.vercel.app) para que CORS permita las llamadas.
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:8080/api',
+  apiUrl: 'https://erp-insurance-api.onrender.com/api',
 };
