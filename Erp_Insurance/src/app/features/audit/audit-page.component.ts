@@ -1,15 +1,73 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { AnomalySeverity, AuditAnomaly } from '../../models/erp.models';
+import { Component, computed, inject, output, signal } from '@angular/core';
+import { AnomalyResponse, AnomalySeverity, BatchResolutionAction } from '../../core/api/api.models';
+import { ErpStore } from '../../core/state/erp.store';
+import { Fmt } from '../../core/ui/format';
 
+/** Bandeja de anomalías (módulo IA simulado): GET /api/audit/anomalies + POST /api/audit/resolve-batch. */
 @Component({
   selector: 'app-audit-page',
-  standalone: true,
   templateUrl: './audit-page.component.html',
 })
 export class AuditPageComponent {
-  @Input({ required: true }) visibleAnomalies: AuditAnomaly[] = [];
-  @Input({ required: true }) filterSeverity: 'all' | AnomalySeverity = 'all';
+  readonly store = inject(ErpStore);
+  readonly fmt = Fmt;
+  readonly anomalySelected = output<AnomalyResponse>();
 
-  @Output() filterChange = new EventEmitter<'all' | AnomalySeverity>();
-  @Output() anomalySelected = new EventEmitter<AuditAnomaly>();
+  readonly selectedIds = signal<ReadonlySet<string>>(new Set());
+  readonly busy = signal<BatchResolutionAction | 'scan' | null>(null);
+
+  readonly visible = this.store.visibleAnomalies;
+  readonly selected = computed(() => this.store.anomalies().filter((a) => this.selectedIds().has(a.id)));
+  readonly selectedAutoCorrectable = computed(() => this.selected().filter((a) => a.autoCorrectable));
+  readonly allVisibleSelected = computed(
+    () => this.visible().length > 0 && this.visible().every((a) => this.selectedIds().has(a.id)),
+  );
+  readonly counts = computed(() => {
+    const all = this.store.anomalies();
+    return {
+      all: all.length,
+      RED: all.filter((a) => a.severity === 'RED').length,
+      YELLOW: all.filter((a) => a.severity === 'YELLOW').length,
+    };
+  });
+
+  setFilter(filter: 'all' | AnomalySeverity): void {
+    this.store.severityFilter.set(filter);
+  }
+
+  toggle(id: string): void {
+    this.selectedIds.update((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  clearSelection(): void {
+    this.selectedIds.set(new Set());
+  }
+
+  toggleAllVisible(): void {
+    const ids = this.visible().map((a) => a.id);
+    this.selectedIds.set(this.allVisibleSelected() ? new Set() : new Set(ids));
+  }
+
+  async resolveSelected(action: BatchResolutionAction): Promise<void> {
+    const targets = action === 'AUTOCORREGIR' ? this.selectedAutoCorrectable() : this.selected();
+    if (targets.length === 0 || this.busy()) return;
+    this.busy.set(action);
+    const ok = await this.store.resolveAnomalies(targets.map((a) => a.id), action);
+    this.busy.set(null);
+    if (ok) this.selectedIds.set(new Set());
+  }
+
+  async rescan(): Promise<void> {
+    this.busy.set('scan');
+    await this.store.run(async () => {
+      await this.store.loadAudit();
+      return `Análisis completado: ${this.store.anomalies().length} hallazgos abiertos.`;
+    });
+    this.busy.set(null);
+  }
 }
