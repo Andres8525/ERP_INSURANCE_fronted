@@ -1,6 +1,6 @@
 # ERP Insurance — Frontend
 
-Interfaz Angular 21 + Tailwind CSS 4 del ERP para corredoras de seguros médicos ACA. Consume la API Spring Boot del repositorio [ERP_INSURANCE_backend](https://github.com/Andres8525/ERP_INSURANCE_backend).
+Interfaz Angular 21 + Tailwind CSS 4 del ERP para corredoras de seguros médicos ACA. Consume la API Spring Boot del repositorio [ERP_INSURANCE_backend](https://github.com/Andres8525/ERP_INSURANCE_backend), desplegada en https://erp-insurance-api.onrender.com.
 
 ## Puesta en marcha
 
@@ -19,11 +19,13 @@ $env:API_TARGET = 'http://localhost:8081'; npm start
 
 Cuentas demo (contraseña `NexoDemo2026!`): `admin@nexo.demo` (administrador), `auditor@nexo.demo` (auditor) y `agente@nexo.demo` (agente, sin acceso a auditoría). La pantalla de login tiene accesos rápidos.
 
+También se puede **crear una cuenta** desde la pestaña *Crear cuenta* (correo válido y contraseña de 12 caracteres o más). Las cuentas nuevas tienen rol agente y quedan con la sesión iniciada.
+
 ## Vistas
 
 | Vista | Endpoints |
 | --- | --- |
-| Login | `POST /api/auth/login`, `GET /api/auth/me` (valida la sesión al recargar) |
+| Login / registro | `POST /api/auth/login`, `POST /api/auth/register`, `GET /api/auth/me` (valida la sesión al recargar) |
 | Resumen | Métricas calculadas con pacientes, siniestros y anomalías |
 | Auditoría IA | `GET /api/audit/anomalies`, `GET /api/audit/summary`, `POST /api/audit/resolve-batch` |
 | Siniestros (Kanban) | `GET /api/claims/pipeline`, `POST/PUT/DELETE /api/claims`, `PATCH /api/claims/{id}/status` |
@@ -35,7 +37,7 @@ Cuentas demo (contraseña `NexoDemo2026!`): `admin@nexo.demo` (administrador), `
 
 ```text
 src/
-  environments/          apiUrl: '/api' en desarrollo, URL del backend en producción
+  environments/          apiUrl: '/api' en desarrollo (proxy), https://erp-insurance-api.onrender.com/api en producción
   app/
     core/api/            api.models.ts (espejo de los DTOs Java) y clientes HTTP
     core/auth/           AuthService (sesión JWT en sessionStorage) e interceptor Bearer
@@ -53,6 +55,12 @@ npm test -- --watch=false    # Vitest: integración HTTP con HttpTestingControll
 npm run build                # build de producción en dist/
 ```
 
-## Despliegue
+## Despliegue en Vercel
 
-Antes de `npm run build`, configura `apiUrl` en [src/environments/environment.ts](src/environments/environment.ts) con la URL pública del backend, y agrega el dominio del frontend en `FRONTEND_ORIGINS` del backend (CORS). [vercel.json](vercel.json) redirige todas las rutas a `index.html`.
+La app está en la raíz del repositorio y [vercel.json](vercel.json) fija instalación (`npm ci`), build (`npm run build`), carpeta de salida (`dist/Erp_Insurance/browser`), redirección de rutas a `index.html` y cabeceras de caché y seguridad.
+
+1. En Vercel: **Add New → Project** e importa `ERP_INSURANCE_fronted`. Deja *Root Directory* en `./`; el resto se toma de `vercel.json`.
+2. **Deploy**. La URL queda como `https://<proyecto>.vercel.app`.
+3. En Render, en el servicio del backend, define `FRONTEND_ORIGINS=https://<proyecto>.vercel.app,https://*.vercel.app` y guarda (Render redespliega). Sin esto el navegador bloquea las llamadas por CORS.
+
+La URL de la API de producción está en [src/environments/environment.ts](src/environments/environment.ts). El plan gratuito de Render se suspende tras ~15 min sin uso: el login avisa si el servidor tarda en despertar.
