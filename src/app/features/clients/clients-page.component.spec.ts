@@ -12,7 +12,7 @@ const tick = () => new Promise((resolve) => setTimeout(resolve));
 
 const ANA: ClientSummary = {
   id: 'c-1',
-  crmId: 'CRM-7K2M9QXA',
+  crmId: 'CRMID-7K2M9QXA',
   fullName: 'Ana Pérez',
   email: 'ana.perez@example.test',
   city: 'Miami',
@@ -29,7 +29,7 @@ const ANA: ClientSummary = {
 
 const DAVID: ClientSummary = {
   id: 'c-2',
-  crmId: 'CRM-4HQ8ZPTE',
+  crmId: 'CRMID-4HQ8ZPTE',
   fullName: 'David Williams',
   email: 'david@example.test',
   city: 'Tampa',
@@ -40,9 +40,9 @@ const DAVID: ClientSummary = {
 };
 
 describe('matchesClient', () => {
-  it('busca sin distinguir tildes ni mayúsculas en CRM ID, ciudad y plan', () => {
+  it('busca sin distinguir tildes ni mayúsculas en CRMID, ciudad y plan', () => {
     expect(matchesClient(ANA, 'perez', 'all')).toBe(true);
-    expect(matchesClient(ANA, 'crm-7k2m', 'all')).toBe(true);
+    expect(matchesClient(ANA, 'crmid-7k2m', 'all')).toBe(true);
     expect(matchesClient(ANA, 'MIAMI', 'all')).toBe(true);
     expect(matchesClient(ANA, 'silver', 'all')).toBe(true);
     expect(matchesClient(ANA, 'tampa', 'all')).toBe(false);
@@ -92,26 +92,47 @@ describe('ClientsPageComponent', () => {
     expect(component.premiumLabel(DAVID)).toBe('Sin plan');
 
     component.setFilter('zero');
-    expect(component.visible().map((c) => c.crmId)).toEqual(['CRM-7K2M9QXA']);
+    expect(component.visible().map((c) => c.crmId)).toEqual(['CRMID-7K2M9QXA']);
   });
 
-  it('descarga la ficha PDF del cliente', async () => {
+  it('muestra la vista previa del PDF antes de descargarlo', async () => {
     await loadClients();
     const createObjectURL = vi.fn(() => 'blob:ficha');
     Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() });
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
 
-    const done = component.downloadPdf(ANA);
-    expect(component.downloading()).toBe('c-1');
-    const request = http.expectOne(`${API}/clients/c-1/pdf`);
+    const done = component.openPreview(ANA);
+    expect(component.preview()).toMatchObject({ loading: true, blob: null });
+    const request = http.expectOne((r) => r.url === `${API}/clients/c-1/pdf`);
+    expect(request.request.params.get('disposition')).toBe('inline');
     expect(request.request.responseType).toBe('blob');
     request.flush(new Blob(['%PDF-1.4'], { type: 'application/pdf' }));
     await done;
 
-    expect(createObjectURL).toHaveBeenCalled();
-    expect(click).toHaveBeenCalled();
-    expect(component.downloading()).toBeNull();
+    expect(component.preview()?.loading).toBe(false);
+    expect(component.preview()?.blob?.size).toBeGreaterThan(0);
+    expect(click).not.toHaveBeenCalled();
+
+    component.downloadPreview();
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(component.preview()).toBeNull();
     expect(TestBed.inject(ErpStore).notice()?.text).toBe('Ficha PDF de Ana Pérez descargada.');
+    http.expectNone((r) => r.url.endsWith('/pdf'));
+  });
+
+  it('informa el error de generación y permite reintentar', async () => {
+    await loadClients();
+    const done = component.openPreview(ANA);
+    http.expectOne((r) => r.url === `${API}/clients/c-1/pdf`).flush(new Blob(['x']), { status: 503, statusText: 'Unavailable' });
+    await done;
+    expect(component.preview()?.error).toContain('No se pudo generar el PDF');
+
+    component.retryPreview();
+    http.expectOne((r) => r.url === `${API}/clients/c-1/pdf`).flush(new Blob(['%PDF']));
+    await tick();
+    expect(component.preview()?.error).toBeNull();
+    component.closePreview();
+    expect(component.preview()).toBeNull();
   });
 
   it('muestra el error si la carga falla', async () => {
