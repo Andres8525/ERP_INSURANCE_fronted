@@ -19,7 +19,8 @@ export class ClientsApi {
     return this.http.get<ClientSummary>(`${this.baseUrl}/${id}`);
   }
 
-  pdf(id: Uuid): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/${id}/pdf`, { responseType: 'blob' });
+  pdf(id: Uuid, disposition: 'inline' | 'attachment' = 'attachment'): Observable<Blob> {
+    const params = new HttpParams().set('disposition', disposition);
+    return this.http.get(`${this.baseUrl}/${id}/pdf`, { params, responseType: 'blob' });
   }
 }
