@@ -16,7 +16,9 @@ export const appConfig: ApplicationConfig = {
     // Despierta el backend en cuanto se abre la página (sin bloquear el arranque): mientras el usuario
     // escribe sus credenciales, Render ya está levantando el servicio.
     provideAppInitializer(() => {
-      void inject(ServerStatusService).warmUp();
+      const server = inject(ServerStatusService);
+      void server.warmUp();
+      server.startKeepAlive();
     }),
   ],
 };

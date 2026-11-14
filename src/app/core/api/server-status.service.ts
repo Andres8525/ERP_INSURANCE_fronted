@@ -13,6 +13,8 @@ export type ServerState = 'checking' | 'waking' | 'ready' | 'offline';
 export const WAKING_THRESHOLD_MS = 3000;
 /** Un arranque en frío de Render free puede tardar ~1 min; se espera un poco más. */
 export const WARM_UP_TIMEOUT_MS = 100_000;
+/** Render free suspende tras 15 min sin tráfico: ping cada 10 min mientras la app está abierta. */
+export const KEEP_ALIVE_INTERVAL_MS = 10 * 60_000;
 
 /**
  * Despierta el backend (GET /actuator/health) y expone su estado para la interfaz.
@@ -28,6 +30,7 @@ export class ServerStatusService {
   readonly lastCheck = signal<Date | null>(null);
 
   private pending: Promise<boolean> | null = null;
+  private keepAliveTimer: ReturnType<typeof setInterval> | undefined;
 
   warmUp(): Promise<boolean> {
     if (this.pending) return this.pending;
@@ -53,5 +56,26 @@ export class ServerStatusService {
         this.pending = null;
       });
     return this.pending;
+  }
+
+  /**
+   * Mantiene despierto el backend mientras la app está abierta y visible: ping periódico y, al volver
+   * a la pestaña tras un rato, comprobación inmediata. Las pestañas ocultas no generan tráfico.
+   */
+  startKeepAlive(intervalMs = KEEP_ALIVE_INTERVAL_MS): void {
+    if (this.keepAliveTimer || typeof document === 'undefined') return;
+    const pingIfVisible = () => {
+      if (document.visibilityState === 'visible') void this.warmUp();
+    };
+    this.keepAliveTimer = setInterval(pingIfVisible, intervalMs);
+    document.addEventListener('visibilitychange', () => {
+      const last = this.lastCheck()?.getTime() ?? 0;
+      if (document.visibilityState === 'visible' && Date.now() - last > intervalMs / 2) void this.warmUp();
+    });
+  }
+
+  stopKeepAlive(): void {
+    clearInterval(this.keepAliveTimer);
+    this.keepAliveTimer = undefined;
   }
 }
