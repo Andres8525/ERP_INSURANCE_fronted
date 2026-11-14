@@ -69,6 +69,20 @@ export class App {
       this.auth.verifySession().subscribe({ error: () => undefined });
     }
 
+    // Si el servidor vuelve tras una caída (o tras despertar con errores de carga), recarga los datos solo.
+    let previousState = this.server.state();
+    effect(() => {
+      const state = this.server.state();
+      const recovered = state === 'ready' && previousState === 'offline';
+      previousState = state;
+      if (recovered && this.auth.isAuthenticated()) {
+        untracked(() => {
+          if (this.store.loadError()) void this.store.loadAll();
+          this.store.notify({ kind: 'success', text: 'Conexión con el servidor restablecida.' });
+        });
+      }
+    });
+
     // Al iniciar sesión (o recargar con sesión vigente) se cargan los datos del backend.
     effect(() => {
       if (this.auth.isAuthenticated()) {
