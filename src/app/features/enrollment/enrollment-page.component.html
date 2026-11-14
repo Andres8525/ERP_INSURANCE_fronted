@@ -40,7 +40,7 @@
         }
       </ol>
 
-      <form class="rounded-lg border border-slate-200 bg-white" novalidate (ngSubmit)="next()" (input)="sync()" (change)="sync()">
+      <form class="rounded-lg border border-slate-200 bg-white" novalidate (ngSubmit)="next()" (focusout)="markTouched($event)" (input)="sync()" (change)="sync()">
         <div class="border-b border-slate-100 px-5 py-4 sm:px-7">
           <h2 class="text-sm font-semibold text-slate-900">
             {{ step() === 1 ? 'Información del solicitante' : step() === 2 ? 'Verificación de elegibilidad' : 'Selección de plan' }}

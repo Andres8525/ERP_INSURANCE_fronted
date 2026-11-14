@@ -179,6 +179,7 @@ export class EnrollmentPageComponent {
   private readonly snapshot = signal<EnrollmentForm>(emptyForm());
   form: EnrollmentForm = emptyForm();
   private readonly attemptedSteps = signal<ReadonlySet<number>>(new Set());
+  private readonly touched = signal<ReadonlySet<EnrollmentField>>(new Set());
 
   readonly fieldErrors = computed(() => validateEnrollment(this.snapshot()));
   readonly emailSuggestion = computed(() => suggestEmail(this.snapshot().email));
@@ -211,7 +212,13 @@ export class EnrollmentPageComponent {
 
   errorFor(field: EnrollmentField): string | null {
     const step = Number(Object.keys(STEP_FIELDS).find((key) => STEP_FIELDS[Number(key)].includes(field)));
-    return this.attemptedSteps().has(step) ? this.fieldErrors()[field] : null;
+    return this.attemptedSteps().has(step) || this.touched().has(field) ? this.fieldErrors()[field] : null;
+  }
+
+  markTouched(event: FocusEvent): void {
+    const name = (event.target as HTMLElement | null)?.getAttribute('name') as EnrollmentField | null;
+    if (!name || !(name in FIELD_LABELS)) return;
+    this.touched.update((fields) => new Set(fields).add(name));
   }
 
   applyEmailSuggestion(suggestion: string): void {
@@ -310,6 +317,7 @@ export class EnrollmentPageComponent {
     this.created.set(null);
     this.error.set(null);
     this.attemptedSteps.set(new Set());
+    this.touched.set(new Set());
     this.step.set(1);
   }
 }
