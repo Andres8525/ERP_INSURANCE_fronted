@@ -213,7 +213,11 @@
             }
           }
           @case ('cloud') {
-            <app-cloud-archive [archiveCandidates]="archiveCandidates" />
+            @defer (on immediate) {
+              <app-cloud-archive [archiveCandidates]="archiveCandidates" />
+            } @placeholder {
+              <div class="h-72 animate-pulse rounded-lg border border-slate-200 bg-white" aria-busy="true"></div>
+            }
           }
         }
       </main>
