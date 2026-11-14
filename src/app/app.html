@@ -199,10 +199,18 @@
             }
           }
           @case ('enrollment') {
-            <app-enrollment-page (patientCreated)="openPatient($event)" (viewChange)="setView($event)" />
+            @defer (on immediate) {
+              <app-enrollment-page (patientCreated)="openPatient($event)" (viewChange)="setView($event)" />
+            } @placeholder {
+              <div class="h-72 animate-pulse rounded-lg border border-slate-200 bg-white" aria-busy="true"></div>
+            }
           }
           @case ('patient') {
-            <app-patient-profile [focusPatientId]="focusPatientId()" />
+            @defer (on immediate) {
+              <app-patient-profile [focusPatientId]="focusPatientId()" />
+            } @placeholder {
+              <div class="h-72 animate-pulse rounded-lg border border-slate-200 bg-white" aria-busy="true"></div>
+            }
           }
           @case ('cloud') {
             <app-cloud-archive [archiveCandidates]="archiveCandidates" />
