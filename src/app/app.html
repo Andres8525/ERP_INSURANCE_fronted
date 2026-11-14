@@ -185,7 +185,11 @@
             <app-overview-page (viewChange)="setView($event)" (anomalySelected)="selectedAnomaly.set($event)" />
           }
           @case ('audit') {
-            <app-audit-page (anomalySelected)="selectedAnomaly.set($event)" />
+            @defer (on immediate) {
+              <app-audit-page (anomalySelected)="selectedAnomaly.set($event)" />
+            } @placeholder {
+              <div class="h-72 animate-pulse rounded-lg border border-slate-200 bg-white" aria-busy="true"></div>
+            }
           }
           @case ('claims') {
             <app-claims-page />
@@ -204,7 +208,9 @@
     </div>
 
     @if (selectedAnomaly(); as anomaly) {
-      <app-anomaly-detail [anomaly]="anomaly" (closed)="selectedAnomaly.set(null)" />
+      @defer (on immediate) {
+        <app-anomaly-detail [anomaly]="anomaly" (closed)="selectedAnomaly.set(null)" />
+      }
     }
 
     @if (store.notice(); as notice) {
