@@ -192,7 +192,11 @@
             }
           }
           @case ('claims') {
-            <app-claims-page />
+            @defer (on immediate) {
+              <app-claims-page />
+            } @placeholder {
+              <div class="h-72 animate-pulse rounded-lg border border-slate-200 bg-white" aria-busy="true"></div>
+            }
           }
           @case ('enrollment') {
             <app-enrollment-page (patientCreated)="openPatient($event)" (viewChange)="setView($event)" />
