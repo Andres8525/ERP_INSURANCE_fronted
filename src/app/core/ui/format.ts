@@ -46,6 +46,48 @@ const POLICY_STATUS: Record<PolicyStatus, string> = {
 };
 const ROLE: Record<UserRole, string> = { ADMIN: 'Administrador', AUDITOR: 'Auditor', AGENT: 'Agente' };
 
+const FIELD_LABELS: Record<string, string> = {
+  firstName: 'Nombre',
+  lastName: 'Apellido',
+  email: 'Correo electrónico',
+  phone: 'Teléfono',
+  dateOfBirth: 'Fecha de nacimiento',
+  householdIncome: 'Ingreso del hogar',
+  password: 'Contraseña',
+  insurer: 'Aseguradora',
+  planName: 'Plan',
+  coverageStart: 'Inicio de cobertura',
+  coverageEnd: 'Fin de cobertura',
+  premiumAmount: 'Prima mensual',
+  description: 'Descripción',
+  location: 'Ubicación',
+  services: 'Servicios',
+  ids: 'Selección',
+  action: 'Acción',
+  status: 'Estado',
+};
+
+const MESSAGE_TRANSLATIONS: [RegExp, string][] = [
+  [/^must not be (blank|null|empty)$/, 'es obligatorio'],
+  [/^must be a valid email address.*$/, 'debe ser un correo con dominio, por ejemplo nombre@correo.com'],
+  [/^must be a well-formed email address$/, 'debe ser un correo válido'],
+  [/^must contain only digits.*$/, 'solo admite números, espacios, paréntesis o guiones'],
+  [/^size must be between (\d+) and (\d+)$/, 'debe tener entre $1 y $2 caracteres'],
+  [/^must be greater than or equal to (.+)$/, 'debe ser mayor o igual que $1'],
+  [/^must match ".*"$/, 'tiene un formato inválido'],
+];
+
+export function fieldLabel(field: string): string {
+  return FIELD_LABELS[field] ?? field;
+}
+
+export function translateValidationMessage(message: string): string {
+  for (const [pattern, replacement] of MESSAGE_TRANSLATIONS) {
+    if (pattern.test(message)) return message.replace(pattern, replacement);
+  }
+  return message;
+}
+
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 const time = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit' });
 const shortDate = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
@@ -106,7 +148,9 @@ export function apiErrorMessage(error: unknown): string {
     if (error.status === 403) return 'Tu rol no tiene permiso para esta acción.';
     const problem = error.error as Partial<ProblemDetail> | null;
     if (problem && typeof problem === 'object') {
-      const fields = Object.entries(problem.errors ?? {}).map(([field, message]) => `${field}: ${message}`);
+      const fields = Object.entries(problem.errors ?? {}).map(
+        ([field, message]) => `${fieldLabel(field)} ${translateValidationMessage(message)}`,
+      );
       if (fields.length) return `${problem.detail ?? 'Datos inválidos'} — ${fields.join('; ')}`;
       if (problem.detail) return problem.detail;
     }

@@ -17,8 +17,8 @@ describe('apiErrorMessage', () => {
       error: { status: 400, detail: 'La solicitud contiene 2 campo(s) inválido(s)', errors: { email: 'must be a well-formed email address', firstName: 'must not be blank' } },
     });
     const message = apiErrorMessage(error);
-    expect(message).toContain('email: must be a well-formed email address');
-    expect(message).toContain('firstName: must not be blank');
+    expect(message).toContain('Correo electrónico debe ser un correo válido');
+    expect(message).toContain('Nombre es obligatorio');
   });
 
   it('usa el detail cuando no hay errores por campo', () => {
