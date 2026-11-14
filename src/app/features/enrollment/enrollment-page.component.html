@@ -40,7 +40,7 @@
         }
       </ol>
 
-      <form class="rounded-lg border border-slate-200 bg-white" (ngSubmit)="next()" (input)="sync()" (change)="sync()">
+      <form class="rounded-lg border border-slate-200 bg-white" novalidate (ngSubmit)="next()" (input)="sync()" (change)="sync()">
         <div class="border-b border-slate-100 px-5 py-4 sm:px-7">
           <h2 class="text-sm font-semibold text-slate-900">
             {{ step() === 1 ? 'Información del solicitante' : step() === 2 ? 'Verificación de elegibilidad' : 'Selección de plan' }}
@@ -53,11 +53,26 @@
         @if (step() === 1) {
           <fieldset class="grid gap-x-5 gap-y-4 p-5 sm:grid-cols-2 sm:px-7 sm:py-6">
             <legend class="sr-only">Datos del paciente</legend>
-            <label class="form-label">Nombre legal *<input class="form-input" name="firstName" maxlength="100" placeholder="Nombre" required [(ngModel)]="form.firstName" /></label>
-            <label class="form-label">Apellido legal *<input class="form-input" name="lastName" maxlength="100" placeholder="Apellido" required [(ngModel)]="form.lastName" /></label>
-            <label class="form-label">Fecha de nacimiento *<input class="form-input" type="date" name="dateOfBirth" required [(ngModel)]="form.dateOfBirth" /></label>
-            <label class="form-label">Correo electrónico *<input class="form-input" type="email" name="email" maxlength="320" placeholder="nombre@correo.com" required [(ngModel)]="form.email" /></label>
-            <label class="form-label">Teléfono móvil<input class="form-input" type="tel" name="phone" maxlength="32" placeholder="(305) 555-0100" [(ngModel)]="form.phone" /></label>
+            <label class="form-label">Nombre legal *
+              <input autocomplete="given-name" class="form-input" name="firstName" maxlength="100" placeholder="Nombre" required [(ngModel)]="form.firstName" [class.form-input-invalid]="errorFor('firstName')" [attr.aria-invalid]="!!errorFor('firstName')" aria-describedby="firstName-error" />
+              <app-field-error fieldId="firstName" [message]="errorFor('firstName')" />
+            </label>
+            <label class="form-label">Apellido legal *
+              <input autocomplete="family-name" class="form-input" name="lastName" maxlength="100" placeholder="Apellido" required [(ngModel)]="form.lastName" [class.form-input-invalid]="errorFor('lastName')" [attr.aria-invalid]="!!errorFor('lastName')" aria-describedby="lastName-error" />
+              <app-field-error fieldId="lastName" [message]="errorFor('lastName')" />
+            </label>
+            <label class="form-label">Fecha de nacimiento *
+              <input [max]="today" class="form-input" type="date" name="dateOfBirth" required [(ngModel)]="form.dateOfBirth" [class.form-input-invalid]="errorFor('dateOfBirth')" [attr.aria-invalid]="!!errorFor('dateOfBirth')" aria-describedby="dateOfBirth-error" />
+              <app-field-error fieldId="dateOfBirth" [message]="errorFor('dateOfBirth')" />
+            </label>
+            <label class="form-label">Correo electrónico *
+              <input autocomplete="email" class="form-input" type="email" name="email" maxlength="320" placeholder="nombre@correo.com" required [(ngModel)]="form.email" [class.form-input-invalid]="errorFor('email')" [attr.aria-invalid]="!!errorFor('email')" aria-describedby="email-error" />
+              <app-field-error fieldId="email" [message]="errorFor('email')" />
+            </label>
+            <label class="form-label">Teléfono móvil
+              <input autocomplete="tel-national" class="form-input" type="tel" name="phone" maxlength="32" placeholder="(305) 555-0100" [(ngModel)]="form.phone" [class.form-input-invalid]="errorFor('phone')" [attr.aria-invalid]="!!errorFor('phone')" aria-describedby="phone-error" />
+              <app-field-error fieldId="phone" [message]="errorFor('phone')" />
+            </label>
             <label class="form-label">Ciudad<input class="form-input" name="city" maxlength="120" placeholder="Miami" [(ngModel)]="form.city" /></label>
           </fieldset>
         }
@@ -67,15 +82,17 @@
             <legend class="sr-only">Elegibilidad ACA</legend>
             <div class="grid gap-4 sm:grid-cols-2">
               <label class="form-label">Tamaño del hogar *
-                <select class="form-input" name="householdSize" required [(ngModel)]="form.householdSize">
+                <select class="form-input" name="householdSize" required [(ngModel)]="form.householdSize" [class.form-input-invalid]="errorFor('householdSize')" [attr.aria-invalid]="!!errorFor('householdSize')" aria-describedby="householdSize-error">
                   <option [ngValue]="null" disabled>Seleccionar miembros</option>
                   @for (n of [1, 2, 3, 4, 5, 6]; track n) {
                     <option [ngValue]="n">{{ n }} {{ n === 1 ? 'persona' : 'personas' }}</option>
                   }
                 </select>
+                <app-field-error fieldId="householdSize" [message]="errorFor('householdSize')" />
               </label>
               <label class="form-label">Ingreso anual estimado del hogar (USD) *
-                <input class="form-input" type="number" min="0" step="0.01" name="householdIncome" placeholder="42000" required [(ngModel)]="form.householdIncome" />
+                <input class="form-input" type="number" min="0" step="0.01" name="householdIncome" placeholder="42000" required [(ngModel)]="form.householdIncome" [class.form-input-invalid]="errorFor('householdIncome')" [attr.aria-invalid]="!!errorFor('householdIncome')" aria-describedby="householdIncome-error" />
+                <app-field-error fieldId="householdIncome" [message]="errorFor('householdIncome')" />
               </label>
             </div>
             <fieldset>
@@ -84,6 +101,7 @@
                 <label class="inline-flex items-center gap-2 text-[11px] text-slate-600"><input type="radio" name="hasCoverage" class="accent-teal-700" [value]="true" [(ngModel)]="form.hasCoverage" />Sí</label>
                 <label class="inline-flex items-center gap-2 text-[11px] text-slate-600"><input type="radio" name="hasCoverage" class="accent-teal-700" [value]="false" [(ngModel)]="form.hasCoverage" />No</label>
               </div>
+              <app-field-error fieldId="hasCoverage" [message]="errorFor('hasCoverage')" />
             </fieldset>
             @if (fplPercent() !== null) {
               <div
@@ -106,22 +124,26 @@
             <legend class="sr-only">Plan y servicios</legend>
             <div class="grid gap-4 sm:grid-cols-2">
               <label class="form-label">Aseguradora *
-                <select class="form-input" name="insurer" required [(ngModel)]="form.insurer">
+                <select class="form-input" name="insurer" required [(ngModel)]="form.insurer" [class.form-input-invalid]="errorFor('insurer')" [attr.aria-invalid]="!!errorFor('insurer')" aria-describedby="insurer-error">
                   <option value="" disabled>Seleccionar aseguradora</option>
                   @for (insurer of insurers; track insurer) { <option [value]="insurer">{{ insurer }}</option> }
                 </select>
+                <app-field-error fieldId="insurer" [message]="errorFor('insurer')" />
               </label>
               <label class="form-label">Nivel del plan *
-                <select class="form-input" name="metalLevel" required [(ngModel)]="form.metalLevel">
+                <select class="form-input" name="metalLevel" required [(ngModel)]="form.metalLevel" [class.form-input-invalid]="errorFor('metalLevel')" [attr.aria-invalid]="!!errorFor('metalLevel')" aria-describedby="metalLevel-error">
                   <option value="" disabled>Seleccionar nivel ACA</option>
                   @for (level of metalLevels; track level) { <option [value]="level">{{ level }}</option> }
                 </select>
+                <app-field-error fieldId="metalLevel" [message]="errorFor('metalLevel')" />
               </label>
               <label class="form-label">Prima mensual (USD) *
-                <input class="form-input" type="number" min="0" step="0.01" name="monthlyPremium" placeholder="428.16" required [(ngModel)]="form.monthlyPremium" />
+                <input class="form-input" type="number" min="0.01" step="0.01" name="monthlyPremium" placeholder="428.16" required [(ngModel)]="form.monthlyPremium" [class.form-input-invalid]="errorFor('monthlyPremium')" [attr.aria-invalid]="!!errorFor('monthlyPremium')" aria-describedby="monthlyPremium-error" />
+                <app-field-error fieldId="monthlyPremium" [message]="errorFor('monthlyPremium')" />
               </label>
               <label class="form-label">Inicio de cobertura *
-                <input class="form-input" type="date" name="coverageStart" required [(ngModel)]="form.coverageStart" />
+                <input class="form-input" type="date" name="coverageStart" required [(ngModel)]="form.coverageStart" [class.form-input-invalid]="errorFor('coverageStart')" [attr.aria-invalid]="!!errorFor('coverageStart')" aria-describedby="coverageStart-error" />
+                <app-field-error fieldId="coverageStart" [message]="errorFor('coverageStart')" />
               </label>
             </div>
             <fieldset>
