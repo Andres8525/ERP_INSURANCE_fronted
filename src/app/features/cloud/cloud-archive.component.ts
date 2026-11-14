@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { CloudArchiveCandidate } from '../../models/erp.models';
+import { CloudArchiveCandidate } from './cloud-archive.data';
 
 @Component({
   selector: 'app-cloud-archive',

@@ -4,7 +4,7 @@ import { ServerStatusService } from './core/api/server-status.service';
 import { AuthService } from './core/auth/auth.service';
 import { ErpStore } from './core/state/erp.store';
 import { Fmt } from './core/ui/format';
-import { CLOUD_ARCHIVE_DEMO } from './data/erp.demo-data';
+import { CLOUD_ARCHIVE_DEMO } from './features/cloud/cloud-archive.data';
 import { AnomalyDetailComponent } from './features/audit/anomaly-detail.component';
 import { AuditPageComponent } from './features/audit/audit-page.component';
 import { LoginPageComponent } from './features/auth/login-page.component';
