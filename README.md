@@ -27,7 +27,7 @@ También se puede **crear una cuenta** desde la pestaña *Crear cuenta* (correo 
 | --- | --- |
 | Login / registro | `POST /api/auth/login`, `POST /api/auth/register`, `GET /api/auth/me` (valida la sesión al recargar) |
 | Resumen | Métricas calculadas con pacientes, siniestros y anomalías |
-| Auditoría IA | `GET /api/audit/anomalies`, `GET /api/audit/summary`, `POST /api/audit/resolve-batch` |
+| Auditoría IA | `GET /api/audit/anomalies`, `GET /api/audit/summary`, `POST /api/audit/scan` (motor gRPC), `POST /api/audit/resolve-batch` |
 | Siniestros (Kanban) | `GET /api/claims/pipeline`, `POST/PUT/DELETE /api/claims`, `PATCH /api/claims/{id}/status` |
 | Afiliaciones (stepper) | `POST /api/patients`, `POST /api/patients/{id}/policies`, `POST /api/claims` |
 | Pacientes | `GET/PUT/DELETE /api/patients`, `GET/PUT/DELETE /api/patients/{id}/policies` |
@@ -39,12 +39,29 @@ También se puede **crear una cuenta** desde la pestaña *Crear cuenta* (correo 
 src/
   environments/          apiUrl: '/api' en desarrollo (proxy), https://erp-insurance-api.onrender.com/api en producción
   app/
-    core/api/            api.models.ts (espejo de los DTOs Java) y clientes HTTP
+    core/api/            api.models.ts (espejo de los DTOs Java), clientes HTTP e interceptores de resiliencia
     core/auth/           AuthService (sesión JWT en sessionStorage) e interceptor Bearer
+    core/layout/         navegación lateral y ViewKey
     core/state/          ErpStore: estado compartido con signals (la app es zoneless)
-    core/ui/             Etiquetas en español, formato y mensajes de error de la API
+    core/ui/             etiquetas en español, formato y traducción de errores de la API
+    core/validation/     reglas de correo, teléfono y fechas compartidas por los formularios
+    shared/ui/           componentes reutilizables (app-field-error)
     features/            auth, overview, audit, claims, enrollment, patient, cloud
 ```
+
+Las importaciones entre capas usan alias definidos en `tsconfig.json`: `@core/*`, `@shared/*`, `@features/*` y `@env/*`.
+
+## Validación de formularios
+
+- Afiliación, ficha del paciente y registro usan las mismas reglas (`core/validation`), equivalentes a las del backend.
+- Cada campo muestra su propio error al salir de él o al pulsar *Continuar*, y el foco va al primer campo inválido.
+- Correos sin extensión de dominio (`piedad@gmailcom`) se explican y se ofrece la corrección (`¿Quisiste decir piedad@gmail.com?`).
+- Los teléfonos se guardan como `(NNN) NNN-NNNN`; la fecha de nacimiento no puede ser futura ni superar 120 años.
+- Si el backend responde 400 con `errors`, el formulario vuelve al paso del campo rechazado y lo marca.
+
+## Auditoría IA con gRPC
+
+*Ejecutar análisis* llama a `POST /api/audit/scan`. El backend envía pacientes y pólizas por gRPC al microservicio `anomaly-engine` (o al mismo motor en proceso si el microservicio no está disponible), guarda los hallazgos nuevos y la bandeja se recarga. La franja *Último análisis* muestra registros revisados, hallazgos nuevos y conocidos, el motor usado, el número de reglas y la duración.
 
 `api.models.ts` debe coincidir con los records del backend. El backend omite los campos `null` (`non_null`), por eso esos campos son opcionales (`?`) en TypeScript.
 
