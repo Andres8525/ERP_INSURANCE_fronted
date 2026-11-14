@@ -1,8 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { environment } from '../../../environments/environment';
-import { PatientResponse } from '../../core/api/api.models';
+import { environment } from '@env/environment';
+import { PatientResponse } from '@core/api/api.models';
 import { EnrollmentPageComponent } from './enrollment-page.component';
 
 const API = environment.apiUrl;

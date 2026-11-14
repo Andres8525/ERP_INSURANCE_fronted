@@ -1,7 +1,7 @@
 import { Component, computed, inject, output, signal } from '@angular/core';
-import { AnomalyResponse, AnomalySeverity, BatchResolutionAction } from '../../core/api/api.models';
-import { ErpStore } from '../../core/state/erp.store';
-import { Fmt } from '../../core/ui/format';
+import { AnomalyResponse, AnomalySeverity, BatchResolutionAction } from '@core/api/api.models';
+import { ErpStore } from '@core/state/erp.store';
+import { Fmt } from '@core/ui/format';
 
 /** Bandeja de anomalías (módulo IA simulado): GET /api/audit/anomalies + POST /api/audit/resolve-batch. */
 @Component({

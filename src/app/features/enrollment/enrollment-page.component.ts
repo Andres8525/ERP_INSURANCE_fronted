@@ -2,16 +2,16 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { AcaEligibilityStatus, PatientResponse, ProblemDetail } from '../../core/api/api.models';
-import { ClaimsApi } from '../../core/api/claims.api';
-import { PatientsApi } from '../../core/api/patients.api';
-import { ErpStore } from '../../core/state/erp.store';
-import { Fmt, apiErrorMessage } from '../../core/ui/format';
-import { birthDateError, coverageStartError } from '../../core/validation/date.validators';
-import { emailError, suggestEmail } from '../../core/validation/email.validators';
-import { normalizePhone, phoneError } from '../../core/validation/phone.validators';
-import { FieldErrorComponent } from '../../shared/ui/field-error.component';
-import { ViewKey } from '../../core/layout/navigation';
+import { AcaEligibilityStatus, PatientResponse, ProblemDetail } from '@core/api/api.models';
+import { ClaimsApi } from '@core/api/claims.api';
+import { PatientsApi } from '@core/api/patients.api';
+import { ErpStore } from '@core/state/erp.store';
+import { Fmt, apiErrorMessage } from '@core/ui/format';
+import { birthDateError, coverageStartError } from '@core/validation/date.validators';
+import { emailError, suggestEmail } from '@core/validation/email.validators';
+import { normalizePhone, phoneError } from '@core/validation/phone.validators';
+import { FieldErrorComponent } from '@shared/ui/field-error.component';
+import { ViewKey } from '@core/layout/navigation';
 
 export interface EnrollmentForm {
   firstName: string;

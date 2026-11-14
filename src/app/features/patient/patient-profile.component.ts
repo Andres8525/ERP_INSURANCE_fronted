@@ -8,13 +8,13 @@ import {
   PolicyResponse,
   PolicyStatus,
   UpdatePatientRequest,
-} from '../../core/api/api.models';
-import { PatientsApi } from '../../core/api/patients.api';
-import { ErpStore } from '../../core/state/erp.store';
-import { Fmt, apiErrorMessage } from '../../core/ui/format';
-import { emailError } from '../../core/validation/email.validators';
-import { normalizePhone, phoneError } from '../../core/validation/phone.validators';
-import { FieldErrorComponent } from '../../shared/ui/field-error.component';
+} from '@core/api/api.models';
+import { PatientsApi } from '@core/api/patients.api';
+import { ErpStore } from '@core/state/erp.store';
+import { Fmt, apiErrorMessage } from '@core/ui/format';
+import { emailError } from '@core/validation/email.validators';
+import { normalizePhone, phoneError } from '@core/validation/phone.validators';
+import { FieldErrorComponent } from '@shared/ui/field-error.component';
 
 type EditField = 'firstName' | 'lastName' | 'email' | 'phone';
 

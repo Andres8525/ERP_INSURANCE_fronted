@@ -2,11 +2,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { TokenResponse } from '../../core/api/api.models';
-import { ServerStatusService } from '../../core/api/server-status.service';
-import { AuthService } from '../../core/auth/auth.service';
-import { apiErrorMessage } from '../../core/ui/format';
-import { emailError, isValidEmail, suggestEmail } from '../../core/validation/email.validators';
+import { TokenResponse } from '@core/api/api.models';
+import { ServerStatusService } from '@core/api/server-status.service';
+import { AuthService } from '@core/auth/auth.service';
+import { apiErrorMessage } from '@core/ui/format';
+import { emailError, isValidEmail, suggestEmail } from '@core/validation/email.validators';
 
 interface DemoAccount {
   email: string;

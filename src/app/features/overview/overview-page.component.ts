@@ -1,9 +1,9 @@
 import { Component, computed, inject, output } from '@angular/core';
-import { AnomalyResponse } from '../../core/api/api.models';
-import { AuthService } from '../../core/auth/auth.service';
-import { ErpStore } from '../../core/state/erp.store';
-import { Fmt } from '../../core/ui/format';
-import { ViewKey } from '../../core/layout/navigation';
+import { AnomalyResponse } from '@core/api/api.models';
+import { AuthService } from '@core/auth/auth.service';
+import { ErpStore } from '@core/state/erp.store';
+import { Fmt } from '@core/ui/format';
+import { ViewKey } from '@core/layout/navigation';
 
 /** Resumen operativo con métricas calculadas a partir de los datos del backend. */
 @Component({

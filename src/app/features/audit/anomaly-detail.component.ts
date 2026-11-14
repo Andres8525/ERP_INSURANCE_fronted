@@ -1,7 +1,7 @@
 import { Component, inject, input, output, signal } from '@angular/core';
-import { AnomalyResponse, BatchResolutionAction } from '../../core/api/api.models';
-import { ErpStore } from '../../core/state/erp.store';
-import { Fmt } from '../../core/ui/format';
+import { AnomalyResponse, BatchResolutionAction } from '@core/api/api.models';
+import { ErpStore } from '@core/state/erp.store';
+import { Fmt } from '@core/ui/format';
 
 /** Panel de comparación de registros de una anomalía y su resolución individual. */
 @Component({

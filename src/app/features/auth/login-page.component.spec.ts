@@ -1,10 +1,10 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { environment } from '../../../environments/environment';
-import { TokenResponse } from '../../core/api/api.models';
-import { authInterceptor } from '../../core/auth/auth.interceptor';
-import { AuthService } from '../../core/auth/auth.service';
+import { environment } from '@env/environment';
+import { TokenResponse } from '@core/api/api.models';
+import { authInterceptor } from '@core/auth/auth.interceptor';
+import { AuthService } from '@core/auth/auth.service';
 import { LoginPageComponent } from './login-page.component';
 
 const API = environment.apiUrl;

@@ -1,10 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { ClaimsApi } from '../../core/api/claims.api';
-import { ClaimPriority, ClaimResponse, ClaimStatus } from '../../core/api/api.models';
-import { ErpStore } from '../../core/state/erp.store';
-import { Fmt } from '../../core/ui/format';
+import { ClaimsApi } from '@core/api/claims.api';
+import { ClaimPriority, ClaimResponse, ClaimStatus } from '@core/api/api.models';
+import { ErpStore } from '@core/state/erp.store';
+import { Fmt } from '@core/ui/format';
 
 interface ClaimColumn {
   status: ClaimStatus;
