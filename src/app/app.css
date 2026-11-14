@@ -21,6 +21,8 @@
 .form-input { width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; padding: 0 10px; color: #334155; font-size: 11px; }
 .form-input::placeholder { color: #94a3b8; }
 .form-input:focus { border-color: #0f766e; outline: 2px solid rgb(15 118 110 / 12%); }
+.form-input-invalid, .form-input-invalid:focus { border-color: #e11d48; outline-color: rgb(225 29 72 / 14%); }
+.field-error { color: #be123c; font-size: 10px; font-weight: 500; line-height: 1.35; }
 .step-connector { position: absolute; top: 15px; left: calc(50% + 20px); width: calc(100% - 40px); height: 1px; background: #e2e8f0; }
 .step-connector-done { background: #0f766e; }
 .step-active { border-color: #0f766e; background: #0f766e; color: #fff; }
