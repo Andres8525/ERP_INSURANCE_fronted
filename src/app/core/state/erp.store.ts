@@ -14,6 +14,7 @@ import {
   ClaimStatus,
   PatientResponse,
   Uuid,
+  ScanResponse,
 } from '../api/api.models';
 import { AuthService } from '../auth/auth.service';
 import { apiErrorMessage } from '../ui/format';
@@ -38,6 +39,7 @@ export class ErpStore {
   private readonly server = inject(ServerStatusService);
 
   readonly anomalies = signal<AnomalyResponse[]>([]);
+  readonly lastScan = signal<ScanResponse | null>(null);
   readonly auditSummary = signal<AuditSummaryResponse | null>(null);
   readonly pipeline = signal<ClaimPipeline>(EMPTY_PIPELINE);
   readonly patients = signal<PatientResponse[]>([]);
@@ -112,6 +114,16 @@ export class ErpStore {
     });
   }
 
+  async scanAnomalies(): Promise<boolean> {
+    return this.run(async () => {
+      const result = await firstValueFrom(this.auditApi.scan());
+      this.lastScan.set(result);
+      await this.loadAudit();
+      if (result.created === 0) return `Análisis completado: sin hallazgos nuevos en ${result.analyzedRecords} registros.`;
+      return `Análisis completado: ${result.created} hallazgo(s) nuevo(s) en ${result.analyzedRecords} registros.`;
+    });
+  }
+
   async moveClaim(claim: ClaimResponse, status: ClaimStatus): Promise<boolean> {
     if (claim.status === status) return true;
     return this.run(async () => {
@@ -148,6 +160,7 @@ export class ErpStore {
 
   reset(): void {
     this.anomalies.set([]);
+    this.lastScan.set(null);
     this.auditSummary.set(null);
     this.pipeline.set(EMPTY_PIPELINE);
     this.patients.set([]);
