@@ -7,7 +7,6 @@ import { RETRY_DELAYS_MS, isTransientError } from '../api/retry.interceptor';
 
 const STORAGE_KEY = 'erp.session';
 
-/** Sesión JWT. El token vive en sessionStorage (se borra al cerrar la pestaña). */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -16,13 +15,9 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.session() !== null);
   readonly email = computed(() => this.session()?.email ?? '');
   readonly role = computed<UserRole | null>(() => this.session()?.role ?? null);
-  /** Solo ADMIN y AUDITOR pueden ver y resolver anomalías (ver AuditController). */
+
   readonly canAudit = computed(() => this.role() === 'ADMIN' || this.role() === 'AUDITOR');
 
-  /**
-   * Inicia sesión. Ante errores transitorios (Render despertando) se reintenta: un login repetido
-   * no tiene efectos secundarios. El registro no se reintenta para no crear cuentas duplicadas.
-   */
   login(request: LoginRequest): Observable<TokenResponse> {
     return this.http.post<TokenResponse>(`${environment.apiUrl}/auth/login`, request).pipe(
       retry({
@@ -36,17 +31,12 @@ export class AuthService {
     );
   }
 
-  /** Crea la cuenta (rol AGENT) y deja la sesión iniciada con el token devuelto. */
   register(request: RegisterRequest): Observable<TokenResponse> {
     return this.http
       .post<TokenResponse>(`${environment.apiUrl}/auth/register`, request)
       .pipe(tap((response) => this.store(response)));
   }
 
-  /**
-   * Confirma con el backend que el token guardado sigue siendo válido (p. ej. tras recargar la página)
-   * y sincroniza email/rol. Un 401 lo resuelve el interceptor cerrando la sesión.
-   */
   verifySession(): Observable<SessionResponse> {
     return this.http.get<SessionResponse>(`${environment.apiUrl}/auth/me`).pipe(
       tap((me) => {
@@ -60,7 +50,6 @@ export class AuthService {
     this.store(null);
   }
 
-  /** Token vigente o null si no hay sesión o ya expiró. */
   token(): string | null {
     const current = this.session();
     if (!current) return null;
@@ -77,7 +66,6 @@ export class AuthService {
       if (value) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value));
       else sessionStorage.removeItem(STORAGE_KEY);
     } catch {
-      // Almacenamiento no disponible (modo privado): la sesión queda solo en memoria.
     }
   }
 }

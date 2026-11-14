@@ -80,7 +80,6 @@ describe('App ↔ backend integration', () => {
 
   afterEach(() => http.verify());
 
-  /** Responde a las cuatro cargas iniciales que dispara el login. */
   function flushInitialLoad(): void {
     const anomaliesReq = http.expectOne((r) => r.url === `${API}/audit/anomalies`);
     expect(anomaliesReq.request.params.get('resolutionStatus')).toBe('OPEN');
@@ -98,7 +97,7 @@ describe('App ↔ backend integration', () => {
     http.expectOne(`${API}/auth/login`).flush(token);
     fixture.detectChanges();
     flushInitialLoad();
-    await new Promise((resolve) => setTimeout(resolve)); // deja terminar las promesas del store
+    await new Promise((resolve) => setTimeout(resolve));
     await fixture.whenStable();
     fixture.detectChanges();
     return fixture;

@@ -26,10 +26,6 @@ export interface Notice {
 
 const EMPTY_PIPELINE: ClaimPipeline = { OPEN: [], IN_REVIEW: [], APPROVED: [], REJECTED: [] };
 
-/**
- * Estado compartido de la aplicación, cargado desde el backend.
- * Los componentes leen las señales y llaman a estos métodos; nada de datos mock salvo la vista de nube.
- */
 @Injectable({ providedIn: 'root' })
 export class ErpStore {
   private readonly auth = inject(AuthService);
@@ -45,7 +41,7 @@ export class ErpStore {
   readonly patients = signal<PatientResponse[]>([]);
 
   readonly loading = signal(false);
-  /** Error de carga general (p. ej. backend apagado). */
+
   readonly loadError = signal<string | null>(null);
   readonly notice = signal<Notice | null>(null);
   readonly lastSync = signal<Date | null>(null);
@@ -73,7 +69,7 @@ export class ErpStore {
       this.lastSync.set(new Date());
     } catch (error) {
       this.loadError.set(apiErrorMessage(error));
-      // Actualiza el estado del servidor: si está caído, la app recargará sola cuando vuelva.
+
       void this.server.warmUp();
     } finally {
       this.loading.set(false);
@@ -103,7 +99,6 @@ export class ErpStore {
     this.patients.set(page.content);
   }
 
-  /** POST /api/audit/resolve-batch y recarga la bandeja. */
   async resolveAnomalies(ids: Uuid[], action: BatchResolutionAction): Promise<boolean> {
     return this.run(async () => {
       const result = await firstValueFrom(this.auditApi.resolveBatch({ ids, action }));
@@ -141,7 +136,6 @@ export class ErpStore {
     });
   }
 
-  /** Ejecuta una acción, muestra el resultado como aviso y devuelve si tuvo éxito. */
   async run(action: () => Promise<string>): Promise<boolean> {
     try {
       this.notify({ kind: 'success', text: await action() });

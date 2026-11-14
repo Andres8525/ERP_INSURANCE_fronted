@@ -1,17 +1,7 @@
-/**
- * Contrato HTTP con el backend Spring Boot (backend/src/main/java/com/erp/insurance).
- * Cada interfaz refleja 1:1 un record Java; si cambias uno, cambia el otro.
- *
- * El backend serializa con `default-property-inclusion: non_null`, por lo que los campos
- * que pueden ser null en Java llegan AUSENTES en el JSON: aquí se declaran opcionales (`?`).
- * Fechas: Instant -> ISO-8601 string (UTC); LocalDate -> 'YYYY-MM-DD'; BigDecimal -> number.
- */
-
 export type Uuid = string;
 export type IsoInstant = string;
 export type IsoDate = string;
 
-// ---- DomainEnums.java -------------------------------------------------------
 export type UserRole = 'ADMIN' | 'AGENT' | 'AUDITOR';
 export type AccountStatus = 'ACTIVE' | 'PENDING' | 'INACTIVE';
 export type AcaEligibilityStatus = 'UNKNOWN' | 'PENDING' | 'ELIGIBLE' | 'INELIGIBLE';
@@ -19,31 +9,28 @@ export type PolicyStatus = 'PENDING' | 'ACTIVE' | 'TERMINATED';
 export type ClaimStatus = 'OPEN' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED';
 export type ClaimPriority = 'NORMAL' | 'HIGH';
 export type AnomalyType = 'POLICY_OVERLAP' | 'DUPLICATE' | 'OBSOLETE_FILE' | 'OTHER';
-/** RED = Crítico, YELLOW = Revisión. */
+
 export type AnomalySeverity = 'RED' | 'YELLOW';
 export type AnomalyResolutionStatus = 'OPEN' | 'RESOLVED' | 'ARCHIVED';
 export type AffectedRecordType = 'PATIENT' | 'POLICY' | 'CLAIM';
 export type BatchResolutionAction = 'ARCHIVAR_DEFINITIVO' | 'AUTOCORREGIR';
 
-// ---- common/PageResponse.java -----------------------------------------------
 export interface PageResponse<T> {
   content: T[];
   totalElements: number;
   totalPages: number;
-  /** Página actual, empieza en 0. */
+
   number: number;
   size: number;
   first: boolean;
   last: boolean;
 }
 
-// ---- auth/AuthController.java -----------------------------------------------
 export interface LoginRequest {
   email: string;
   password: string;
 }
 
-/** POST /api/auth/register: crea una cuenta con rol AGENT. Contraseña de 12 a 128 caracteres. */
 export type RegisterRequest = LoginRequest;
 
 export interface TokenResponse {
@@ -54,27 +41,24 @@ export interface TokenResponse {
   role: UserRole;
 }
 
-/** GET /api/auth/me */
 export interface SessionResponse {
   email: string;
   role: UserRole;
   expiresAt: IsoInstant;
 }
 
-// ---- patients/PatientDtos.java ----------------------------------------------
 export interface CreatePatientRequest {
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
-  /** 'YYYY-MM-DD' */
+
   dateOfBirth: string;
   householdIncome?: number;
   acaEligibilityStatus?: AcaEligibilityStatus;
   accountStatus?: AccountStatus;
 }
 
-/** PUT/PATCH parcial: solo se modifican los campos enviados. */
 export type UpdatePatientRequest = Partial<CreatePatientRequest>;
 
 export interface PatientResponse {
@@ -90,7 +74,6 @@ export interface PatientResponse {
   createdAt: IsoInstant;
 }
 
-// ---- policies/PolicyDtos.java -----------------------------------------------
 export interface CreatePolicyRequest {
   policyNumber?: string;
   insurer: string;
@@ -101,7 +84,6 @@ export interface CreatePolicyRequest {
   status?: PolicyStatus;
 }
 
-/** PUT/PATCH parcial de póliza: solo se modifican los campos enviados. */
 export type UpdatePolicyRequest = Partial<Omit<CreatePolicyRequest, 'policyNumber'>>;
 
 export interface PolicyResponse {
@@ -118,7 +100,6 @@ export interface PolicyResponse {
   createdAt: IsoInstant;
 }
 
-// ---- claims/ClaimDtos.java --------------------------------------------------
 export interface ClaimServiceRequest {
   name: string;
   details?: string;
@@ -184,10 +165,8 @@ export interface ClaimResponse {
   updatedAt: IsoInstant;
 }
 
-/** GET /api/claims/pipeline: siempre incluye las cuatro columnas. */
 export type ClaimPipeline = Record<ClaimStatus, ClaimResponse[]>;
 
-// ---- audit/AuditDtos.java ---------------------------------------------------
 export interface AnomalyPatient {
   id: Uuid;
   fullName: string;
@@ -204,7 +183,7 @@ export interface AnomalyResponse {
   affectedRecordId: Uuid;
   patient?: AnomalyPatient;
   source?: string;
-  /** Confianza del modelo IA, 0-100. */
+
   confidence?: number;
   fieldLabel?: string;
   currentValue?: string;
@@ -212,7 +191,7 @@ export interface AnomalyResponse {
   evidence?: string;
   suggestedCorrectionField?: string;
   suggestedCorrectionValue?: string;
-  /** true si el backend puede aplicar la sugerencia con AUTOCORREGIR. */
+
   autoCorrectable: boolean;
   createdAt: IsoInstant;
 }
@@ -257,13 +236,12 @@ export interface AuditSummaryResponse {
   resolvedThisMonth: number;
 }
 
-/** Cuerpo de error RFC 7807 (spring.mvc.problemdetails.enabled=true). */
 export interface ProblemDetail {
   type?: string;
   title?: string;
   status: number;
   detail?: string;
   instance?: string;
-  /** Errores por campo (validación del cuerpo o de parámetros): campo -> mensaje. */
+
   errors?: Record<string, string>;
 }

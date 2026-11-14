@@ -12,7 +12,6 @@ import {
   Uuid,
 } from './api.models';
 
-/** /api/claims — CRUD de siniestros y pipeline Kanban. */
 @Injectable({ providedIn: 'root' })
 export class ClaimsApi {
   private readonly http = inject(HttpClient);

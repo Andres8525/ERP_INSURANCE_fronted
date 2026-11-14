@@ -12,7 +12,6 @@ import {
   ScanResponse,
 } from './api.models';
 
-/** /api/audit — bandeja de anomalías detectadas por el motor IA (simulado con datos semilla). */
 @Injectable({ providedIn: 'root' })
 export class AuditApi {
   private readonly http = inject(HttpClient);

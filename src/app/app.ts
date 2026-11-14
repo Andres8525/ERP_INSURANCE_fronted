@@ -42,17 +42,17 @@ export class App {
   readonly auth = inject(AuthService);
   readonly store = inject(ErpStore);
   readonly server = inject(ServerStatusService);
-  /** El backend responde y la última carga de datos no falló. */
+
   readonly serverOk = computed(() => this.server.state() === 'ready' && !this.store.loadError());
   readonly fmt = Fmt;
 
   readonly activeView = signal<ViewKey>('overview');
-  /** Menú lateral en móvil (overlay). */
+
   readonly sidebarOpen = signal(false);
-  /** Menú lateral colapsado a solo iconos en escritorio. */
+
   readonly sidebarCollapsed = signal(false);
   readonly selectedAnomaly = signal<AnomalyResponse | null>(null);
-  /** Paciente a mostrar al entrar en la vista Pacientes (p. ej. tras una afiliación). */
+
   readonly focusPatientId = signal<string | null>(null);
   readonly archiveCandidates = CLOUD_ARCHIVE_DEMO;
 
@@ -63,13 +63,10 @@ export class App {
   readonly viewTitle = computed(() => VIEW_TITLES[this.activeView()]);
 
   constructor() {
-    // Sesión restaurada desde sessionStorage: confirmar con el backend que el token sigue vigente.
-    // Si responde 401 (p. ej. el backend se reinició con otro secreto), el interceptor cierra la sesión.
     if (this.auth.isAuthenticated()) {
       this.auth.verifySession().subscribe({ error: () => undefined });
     }
 
-    // Si el servidor vuelve tras una caída (o tras despertar con errores de carga), recarga los datos solo.
     let previousState = this.server.state();
     effect(() => {
       const state = this.server.state();
@@ -83,7 +80,6 @@ export class App {
       }
     });
 
-    // Al iniciar sesión (o recargar con sesión vigente) se cargan los datos del backend.
     effect(() => {
       if (this.auth.isAuthenticated()) {
         untracked(() => void this.store.loadAll());

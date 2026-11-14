@@ -14,7 +14,6 @@ import {
   Uuid,
 } from './api.models';
 
-/** /api/patients — CRUD de pacientes y sus pólizas. */
 @Injectable({ providedIn: 'root' })
 export class PatientsApi {
   private readonly http = inject(HttpClient);

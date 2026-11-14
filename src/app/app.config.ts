@@ -13,8 +13,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, retryInterceptor, timeoutInterceptor])),
-    // Despierta el backend en cuanto se abre la página (sin bloquear el arranque): mientras el usuario
-    // escribe sus credenciales, Render ya está levantando el servicio.
+
     provideAppInitializer(() => {
       const server = inject(ServerStatusService);
       void server.warmUp();
