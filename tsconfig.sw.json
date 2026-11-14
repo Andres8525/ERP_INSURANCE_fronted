@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/sw",
+    "lib": ["es2022", "webworker", "webworker.iterable"],
+    "types": [],
+    "noEmit": true
+  },
+  "include": ["src/app/core/workers/offline/medical-offline.sw.ts"]
+}
