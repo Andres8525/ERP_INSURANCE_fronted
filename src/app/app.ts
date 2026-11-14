@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { AnomalyResponse } from './core/api/api.models';
+import { ServerStatusService } from './core/api/server-status.service';
 import { AuthService } from './core/auth/auth.service';
 import { ErpStore } from './core/state/erp.store';
 import { Fmt } from './core/ui/format';
@@ -40,6 +41,9 @@ const VIEW_TITLES: Record<ViewKey, string> = {
 export class App {
   readonly auth = inject(AuthService);
   readonly store = inject(ErpStore);
+  readonly server = inject(ServerStatusService);
+  /** El backend responde y la última carga de datos no falló. */
+  readonly serverOk = computed(() => this.server.state() === 'ready' && !this.store.loadError());
   readonly fmt = Fmt;
 
   readonly activeView = signal<ViewKey>('overview');
