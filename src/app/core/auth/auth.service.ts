@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, retry, tap, timer } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginRequest, RegisterRequest, SessionResponse, TokenResponse, UserRole } from '../api/api.models';
+import { RETRY_DELAYS_MS, isTransientError } from '../api/retry.interceptor';
 
 const STORAGE_KEY = 'erp.session';
 
@@ -18,10 +19,21 @@ export class AuthService {
   /** Solo ADMIN y AUDITOR pueden ver y resolver anomalías (ver AuditController). */
   readonly canAudit = computed(() => this.role() === 'ADMIN' || this.role() === 'AUDITOR');
 
+  /**
+   * Inicia sesión. Ante errores transitorios (Render despertando) se reintenta: un login repetido
+   * no tiene efectos secundarios. El registro no se reintenta para no crear cuentas duplicadas.
+   */
   login(request: LoginRequest): Observable<TokenResponse> {
-    return this.http
-      .post<TokenResponse>(`${environment.apiUrl}/auth/login`, request)
-      .pipe(tap((response) => this.store(response)));
+    return this.http.post<TokenResponse>(`${environment.apiUrl}/auth/login`, request).pipe(
+      retry({
+        count: RETRY_DELAYS_MS.length,
+        delay: (error: unknown, attempt: number) => {
+          if (!isTransientError(error)) throw error;
+          return timer(RETRY_DELAYS_MS[attempt - 1]);
+        },
+      }),
+      tap((response) => this.store(response)),
+    );
   }
 
   /** Crea la cuenta (rol AGENT) y deja la sesión iniciada con el token devuelto. */
