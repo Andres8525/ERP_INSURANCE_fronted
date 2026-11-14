@@ -9,6 +9,7 @@ import {
   PageResponse,
   ResolveBatchRequest,
   ResolveBatchResponse,
+  ScanResponse,
 } from './api.models';
 
 /** /api/audit — bandeja de anomalías detectadas por el motor IA (simulado con datos semilla). */
@@ -27,6 +28,10 @@ export class AuditApi {
 
   summary(): Observable<AuditSummaryResponse> {
     return this.http.get<AuditSummaryResponse>(`${this.baseUrl}/summary`);
+  }
+
+  scan(): Observable<ScanResponse> {
+    return this.http.post<ScanResponse>(`${this.baseUrl}/scan`, {});
   }
 
   resolveBatch(request: ResolveBatchRequest): Observable<ResolveBatchResponse> {

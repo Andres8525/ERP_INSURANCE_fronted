@@ -236,6 +236,20 @@ export interface ResolveBatchResponse {
   ids: Uuid[];
 }
 
+export type EngineMode = 'REMOTE' | 'IN_PROCESS';
+
+export interface ScanResponse {
+  analyzedRecords: number;
+  findings: number;
+  created: number;
+  alreadyKnown: number;
+  engineMode: EngineMode;
+  engineVersion: string;
+  appliedRules: string[];
+  correlationId: string;
+  durationMs: number;
+}
+
 export interface AuditSummaryResponse {
   open: number;
   critical: number;
