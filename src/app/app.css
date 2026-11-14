@@ -40,7 +40,7 @@
 
 @media (min-width: 1024px) {
   .app-sidebar { transform: translateX(0); }
-  /* Menú lateral colapsado a solo iconos (botón en la cabecera). */
+
   .app-collapsed .app-sidebar { width: 4.5rem; }
   .app-collapsed .app-sidebar .sidebar-label { display: none; }
   .app-collapsed .app-sidebar .sidebar-brand { padding-inline: 1.125rem; }
