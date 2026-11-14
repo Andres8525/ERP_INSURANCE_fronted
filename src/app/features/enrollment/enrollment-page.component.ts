@@ -1,4 +1,4 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { AcaEligibilityStatus, PatientResponse } from '../../core/api/api.models';
@@ -6,9 +6,13 @@ import { ClaimsApi } from '../../core/api/claims.api';
 import { PatientsApi } from '../../core/api/patients.api';
 import { ErpStore } from '../../core/state/erp.store';
 import { Fmt, apiErrorMessage } from '../../core/ui/format';
+import { birthDateError, coverageStartError } from '../../core/validation/date.validators';
+import { emailError } from '../../core/validation/email.validators';
+import { phoneError } from '../../core/validation/phone.validators';
+import { FieldErrorComponent } from '../../shared/ui/field-error.component';
 import { ViewKey } from '../../models/erp.models';
 
-interface EnrollmentForm {
+export interface EnrollmentForm {
   firstName: string;
   lastName: string;
   dateOfBirth: string;
@@ -38,10 +42,88 @@ export const LINKED_SERVICES = [
 
 const STEP_TITLES = ['Datos del paciente', 'Elegibilidad ACA', 'Plan y servicios'] as const;
 
+export type EnrollmentField =
+  | 'firstName'
+  | 'lastName'
+  | 'dateOfBirth'
+  | 'email'
+  | 'phone'
+  | 'householdSize'
+  | 'householdIncome'
+  | 'hasCoverage'
+  | 'insurer'
+  | 'metalLevel'
+  | 'monthlyPremium'
+  | 'coverageStart';
+
+export const STEP_FIELDS: Record<number, readonly EnrollmentField[]> = {
+  1: ['firstName', 'lastName', 'dateOfBirth', 'email', 'phone'],
+  2: ['householdSize', 'householdIncome', 'hasCoverage'],
+  3: ['insurer', 'metalLevel', 'monthlyPremium', 'coverageStart'],
+};
+
+const FIELD_LABELS: Record<EnrollmentField, string> = {
+  firstName: 'Nombre legal',
+  lastName: 'Apellido legal',
+  dateOfBirth: 'Fecha de nacimiento',
+  email: 'Correo electrónico',
+  phone: 'Teléfono móvil',
+  householdSize: 'Tamaño del hogar',
+  householdIncome: 'Ingreso anual',
+  hasCoverage: 'Cobertura actual',
+  insurer: 'Aseguradora',
+  metalLevel: 'Nivel del plan',
+  monthlyPremium: 'Prima mensual',
+  coverageStart: 'Inicio de cobertura',
+};
+
+const MAX_HOUSEHOLD_INCOME = 99_999_999.99;
+const MAX_MONTHLY_PREMIUM = 10_000;
+
+function requiredName(value: string, label: string): string | null {
+  const text = value.trim();
+  if (!text) return `Ingresa el ${label.toLowerCase()}.`;
+  return text.length > 100 ? 'Máximo 100 caracteres.' : null;
+}
+
+export function validateEnrollment(f: EnrollmentForm, today = new Date()): Record<EnrollmentField, string | null> {
+  return {
+    firstName: requiredName(f.firstName, 'nombre'),
+    lastName: requiredName(f.lastName, 'apellido'),
+    dateOfBirth: birthDateError(f.dateOfBirth, today),
+    email: emailError(f.email),
+    phone: phoneError(f.phone),
+    householdSize: f.householdSize ? null : 'Selecciona el tamaño del hogar.',
+    householdIncome:
+      f.householdIncome === null || f.householdIncome === undefined || Number.isNaN(f.householdIncome)
+        ? 'Ingresa el ingreso anual del hogar.'
+        : f.householdIncome < 0
+          ? 'El ingreso no puede ser negativo.'
+          : f.householdIncome > MAX_HOUSEHOLD_INCOME
+            ? 'El ingreso supera el máximo permitido.'
+            : null,
+    hasCoverage: f.hasCoverage === null ? 'Indica si tiene cobertura médica actualmente.' : null,
+    insurer: f.insurer ? null : 'Selecciona la aseguradora.',
+    metalLevel: f.metalLevel ? null : 'Selecciona el nivel del plan.',
+    monthlyPremium:
+      f.monthlyPremium === null || f.monthlyPremium === undefined || Number.isNaN(f.monthlyPremium)
+        ? 'Ingresa la prima mensual.'
+        : f.monthlyPremium <= 0
+          ? 'La prima debe ser mayor que 0.'
+          : f.monthlyPremium > MAX_MONTHLY_PREMIUM
+            ? 'La prima mensual no puede superar 10.000 USD.'
+            : null,
+    coverageStart: coverageStartError(f.coverageStart, today),
+  };
+}
+
+function localIsoDate(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 function firstOfNextMonth(): string {
   const now = new Date();
-  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
+  return localIsoDate(new Date(now.getFullYear(), now.getMonth() + 1, 1));
 }
 
 function emptyForm(): EnrollmentForm {
@@ -69,13 +151,14 @@ function emptyForm(): EnrollmentForm {
  */
 @Component({
   selector: 'app-enrollment-page',
-  imports: [FormsModule],
+  imports: [FormsModule, FieldErrorComponent],
   templateUrl: './enrollment-page.component.html',
 })
 export class EnrollmentPageComponent {
   private readonly patientsApi = inject(PatientsApi);
   private readonly claimsApi = inject(ClaimsApi);
   private readonly store = inject(ErpStore);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly fmt = Fmt;
 
   readonly patientCreated = output<string>();
@@ -86,6 +169,7 @@ export class EnrollmentPageComponent {
   readonly services = LINKED_SERVICES;
   readonly insurers = ['Ambetter', 'Oscar Health', 'Florida Blue', 'Molina Healthcare', 'Aetna CVS Health'];
   readonly metalLevels = ['Bronze', 'Silver', 'Gold', 'Platinum'];
+  readonly today = localIsoDate(new Date());
 
   readonly step = signal(1);
   readonly submitting = signal(false);
@@ -94,6 +178,9 @@ export class EnrollmentPageComponent {
   /** Copia en señal del formulario para que los `computed` reaccionen (zoneless). */
   private readonly snapshot = signal<EnrollmentForm>(emptyForm());
   form: EnrollmentForm = emptyForm();
+  private readonly attemptedSteps = signal<ReadonlySet<number>>(new Set());
+
+  readonly fieldErrors = computed(() => validateEnrollment(this.snapshot()));
 
   readonly fplPercent = computed(() => {
     const { householdSize, householdIncome } = this.snapshot();
@@ -112,13 +199,22 @@ export class EnrollmentPageComponent {
     this.snapshot.set({ ...this.form, services: { ...this.form.services } });
   }
 
+  invalidFields(step: number): EnrollmentField[] {
+    const errors = this.fieldErrors();
+    return STEP_FIELDS[step].filter((field) => errors[field]);
+  }
+
   stepValid(step: number): boolean {
-    const f = this.form;
-    if (step === 1) {
-      return !!(f.firstName.trim() && f.lastName.trim() && f.dateOfBirth && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email));
-    }
-    if (step === 2) return !!f.householdSize && f.householdIncome !== null && f.householdIncome >= 0 && f.hasCoverage !== null;
-    return !!(f.insurer && f.metalLevel && f.monthlyPremium !== null && f.monthlyPremium >= 0 && f.coverageStart);
+    return this.invalidFields(step).length === 0;
+  }
+
+  errorFor(field: EnrollmentField): string | null {
+    const step = Number(Object.keys(STEP_FIELDS).find((key) => STEP_FIELDS[Number(key)].includes(field)));
+    return this.attemptedSteps().has(step) ? this.fieldErrors()[field] : null;
+  }
+
+  private focusField(field: EnrollmentField): void {
+    setTimeout(() => this.host.nativeElement.querySelector<HTMLElement>(`[name="${field}"]`)?.focus());
   }
 
   hasServices(): boolean {
@@ -132,8 +228,16 @@ export class EnrollmentPageComponent {
 
   next(): void {
     this.sync();
-    if (!this.stepValid(this.step())) {
-      this.error.set('Completa los campos obligatorios de este paso.');
+    const invalid = this.invalidFields(this.step());
+    if (invalid.length) {
+      this.attemptedSteps.update((steps) => new Set(steps).add(this.step()));
+      const [first] = invalid;
+      this.error.set(
+        invalid.length === 1
+          ? `${FIELD_LABELS[first]}: ${this.fieldErrors()[first]}`
+          : `Revisa los ${invalid.length} campos marcados en rojo.`,
+      );
+      this.focusField(first);
       return;
     }
     this.error.set(null);
@@ -198,6 +302,7 @@ export class EnrollmentPageComponent {
     this.sync();
     this.created.set(null);
     this.error.set(null);
+    this.attemptedSteps.set(new Set());
     this.step.set(1);
   }
 }
