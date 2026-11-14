@@ -10,10 +10,12 @@ const tick = () => new Promise((resolve) => setTimeout(resolve));
 
 const PATIENT: PatientResponse = {
   id: '6f1c2a10-0000-4000-8000-000000000001',
+  crmId: 'CRM-7K2M9QXA',
   firstName: 'Piedad Del Socorro',
   lastName: 'Garcia Nupan',
   email: 'piedad@gmail.com',
   phone: '(305) 450-8353',
+  city: 'Boston',
   dateOfBirth: '1969-03-10',
   acaEligibilityStatus: 'ELIGIBLE',
   accountStatus: 'PENDING',

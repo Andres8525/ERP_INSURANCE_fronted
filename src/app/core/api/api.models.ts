@@ -52,7 +52,7 @@ export interface CreatePatientRequest {
   lastName: string;
   email: string;
   phone?: string;
-
+  city?: string;
   dateOfBirth: string;
   householdIncome?: number;
   acaEligibilityStatus?: AcaEligibilityStatus;
@@ -63,15 +63,44 @@ export type UpdatePatientRequest = Partial<CreatePatientRequest>;
 
 export interface PatientResponse {
   id: Uuid;
+  crmId: string;
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
+  city?: string;
   dateOfBirth: string;
   householdIncome?: number;
   acaEligibilityStatus: AcaEligibilityStatus;
   accountStatus: AccountStatus;
   createdAt: IsoInstant;
+}
+
+export interface ClientPlan {
+  policyId: Uuid;
+  policyNumber: string;
+  insurer: string;
+  planName?: string;
+  premiumAmount: number;
+  zeroPremium: boolean;
+  coverageStart: IsoDate;
+  coverageEnd: IsoDate;
+  status: PolicyStatus;
+}
+
+export interface ClientSummary {
+  id: Uuid;
+  crmId: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  city?: string;
+  age?: number;
+  accountStatus: AccountStatus;
+  acaEligibilityStatus: AcaEligibilityStatus;
+  currentPlan?: ClientPlan;
+  policies: number;
+  description: string;
 }
 
 export interface CreatePolicyRequest {
