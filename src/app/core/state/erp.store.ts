@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { AuditApi } from '../api/audit.api';
 import { ClaimsApi } from '../api/claims.api';
 import { PatientsApi } from '../api/patients.api';
+import { ServerStatusService } from '../api/server-status.service';
 import {
   AnomalyResponse,
   AnomalySeverity,
@@ -34,6 +35,7 @@ export class ErpStore {
   private readonly auditApi = inject(AuditApi);
   private readonly claimsApi = inject(ClaimsApi);
   private readonly patientsApi = inject(PatientsApi);
+  private readonly server = inject(ServerStatusService);
 
   readonly anomalies = signal<AnomalyResponse[]>([]);
   readonly auditSummary = signal<AuditSummaryResponse | null>(null);
@@ -69,6 +71,8 @@ export class ErpStore {
       this.lastSync.set(new Date());
     } catch (error) {
       this.loadError.set(apiErrorMessage(error));
+      // Actualiza el estado del servidor: si está caído, la app recargará sola cuando vuelva.
+      void this.server.warmUp();
     } finally {
       this.loading.set(false);
     }
