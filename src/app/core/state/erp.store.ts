@@ -17,6 +17,7 @@ import {
   ScanResponse,
 } from '../api/api.models';
 import { AuthService } from '../auth/auth.service';
+import { isQueuedResponse } from '../workers/offline/offline.protocol';
 import { apiErrorMessage } from '../ui/format';
 
 export interface Notice {
@@ -25,6 +26,13 @@ export interface Notice {
 }
 
 const EMPTY_PIPELINE: ClaimPipeline = { OPEN: [], IN_REVIEW: [], APPROVED: [], REJECTED: [] };
+
+export function moveInPipeline(pipeline: ClaimPipeline, claim: ClaimResponse, status: ClaimStatus): ClaimPipeline {
+  const next = { ...pipeline } as ClaimPipeline;
+  for (const key of Object.keys(next) as ClaimStatus[]) next[key] = next[key].filter((c) => c.id !== claim.id);
+  next[status] = [{ ...claim, status }, ...next[status]];
+  return next;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ErpStore {
@@ -122,7 +130,11 @@ export class ErpStore {
   async moveClaim(claim: ClaimResponse, status: ClaimStatus): Promise<boolean> {
     if (claim.status === status) return true;
     return this.run(async () => {
-      await firstValueFrom(this.claimsApi.changeStatus(claim.id, { status }));
+      const result = await firstValueFrom(this.claimsApi.changeStatus(claim.id, { status }));
+      if (isQueuedResponse(result)) {
+        this.pipeline.update((pipeline) => moveInPipeline(pipeline, claim, status));
+        return `Sin conexión: ${claim.claimNumber} se actualizará al recuperar la red.`;
+      }
       await this.loadClaims();
       return `${claim.claimNumber} movido a la siguiente etapa.`;
     });

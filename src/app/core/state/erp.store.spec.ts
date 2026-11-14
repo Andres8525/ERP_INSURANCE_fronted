@@ -4,7 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { environment } from '@env/environment';
 import { ScanResponse } from '../api/api.models';
 import { AuthService } from '../auth/auth.service';
-import { ErpStore } from './erp.store';
+import { ClaimResponse } from '../api/api.models';
+import { ErpStore, moveInPipeline } from './erp.store';
 
 const API = environment.apiUrl;
 const tick = () => new Promise((resolve) => setTimeout(resolve));
@@ -81,3 +82,33 @@ describe('ErpStore.scanAnomalies', () => {
     expect(store.lastScan()).toBeNull();
   });
 });
+
+describe('cola offline de cambios de estado', () => {
+  const claim = { id: 'c-1', claimNumber: 'CLM-1', status: 'OPEN' } as ClaimResponse;
+
+  it('mueve la tarjeta localmente sin duplicarla', () => {
+    const pipeline = moveInPipeline({ OPEN: [claim], IN_REVIEW: [], APPROVED: [], REJECTED: [] }, claim, 'IN_REVIEW');
+    expect(pipeline.OPEN).toEqual([]);
+    expect(pipeline.IN_REVIEW.map((c) => [c.id, c.status])).toEqual([['c-1', 'IN_REVIEW']]);
+  });
+
+  it('envía Idempotency-Key y avisa cuando el Service Worker encola el cambio', async () => {
+    sessionStorage.clear();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const http = TestBed.inject(HttpTestingController);
+    const store = TestBed.inject(ErpStore);
+    store.pipeline.set({ OPEN: [claim], IN_REVIEW: [], APPROVED: [], REJECTED: [] });
+
+    const done = store.moveClaim(claim, 'APPROVED');
+    const request = http.expectOne(`${API}/claims/c-1/status`);
+    expect(request.request.headers.get('Idempotency-Key')).toMatch(/^[A-Za-z0-9_-]{8,128}$/);
+    request.flush({ queued: true, idempotencyKey: 'k' }, { status: 202, statusText: 'Accepted' });
+
+    expect(await done).toBe(true);
+    expect(store.pipeline().APPROVED[0].id).toBe('c-1');
+    expect(store.notice()?.text).toBe('Sin conexión: CLM-1 se actualizará al recuperar la red.');
+    http.verify();
+  });
+});
+

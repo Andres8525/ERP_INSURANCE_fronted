@@ -11,6 +11,13 @@ import {
   UpdateClaimRequest,
   Uuid,
 } from './api.models';
+import { QueuedResponseBody } from '../workers/offline/offline.protocol';
+
+export function newIdempotencyKey(): string {
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ClaimsApi {
@@ -40,8 +47,10 @@ export class ClaimsApi {
     return this.http.put<ClaimResponse>(`${this.baseUrl}/${id}`, request);
   }
 
-  changeStatus(id: Uuid, request: ChangeStatusRequest): Observable<ClaimResponse> {
-    return this.http.patch<ClaimResponse>(`${this.baseUrl}/${id}/status`, request);
+  changeStatus(id: Uuid, request: ChangeStatusRequest, idempotencyKey = newIdempotencyKey()): Observable<ClaimResponse | QueuedResponseBody> {
+    return this.http.patch<ClaimResponse | QueuedResponseBody>(`${this.baseUrl}/${id}/status`, request, {
+      headers: { 'Idempotency-Key': idempotencyKey },
+    });
   }
 
   delete(id: Uuid): Observable<void> {
