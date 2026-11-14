@@ -12,6 +12,22 @@ import {
 import { PatientsApi } from '../../core/api/patients.api';
 import { ErpStore } from '../../core/state/erp.store';
 import { Fmt, apiErrorMessage } from '../../core/ui/format';
+import { emailError } from '../../core/validation/email.validators';
+import { normalizePhone, phoneError } from '../../core/validation/phone.validators';
+import { FieldErrorComponent } from '../../shared/ui/field-error.component';
+
+type EditField = 'firstName' | 'lastName' | 'email' | 'phone';
+
+export function validatePatientDraft(draft: Pick<UpdatePatientRequest, EditField>): Partial<Record<EditField, string>> {
+  const errors: Partial<Record<EditField, string>> = {};
+  if (!draft.firstName?.trim()) errors.firstName = 'Ingresa el nombre.';
+  if (!draft.lastName?.trim()) errors.lastName = 'Ingresa el apellido.';
+  const email = emailError(draft.email);
+  if (email) errors.email = email;
+  const phone = phoneError(draft.phone);
+  if (phone) errors.phone = phone;
+  return errors;
+}
 
 type EditDraft = Required<Pick<UpdatePatientRequest, 'firstName' | 'lastName' | 'email' | 'phone'>> & {
   accountStatus: AccountStatus;
@@ -21,7 +37,7 @@ type EditDraft = Required<Pick<UpdatePatientRequest, 'firstName' | 'lastName' | 
 /** Pacientes: listado + ficha (GET/PUT/DELETE /api/patients, GET /api/patients/{id}/policies). */
 @Component({
   selector: 'app-patient-profile',
-  imports: [FormsModule],
+  imports: [FormsModule, FieldErrorComponent],
   templateUrl: './patient-profile.component.html',
 })
 export class PatientProfileComponent {
@@ -38,6 +54,7 @@ export class PatientProfileComponent {
   readonly policiesLoading = signal(false);
   readonly policiesError = signal<string | null>(null);
   readonly editing = signal(false);
+  readonly editErrors = signal<Partial<Record<EditField, string>>>({});
   readonly saving = signal(false);
   draft: EditDraft | null = null;
 
@@ -122,11 +139,15 @@ export class PatientProfileComponent {
       accountStatus: patient.accountStatus,
       acaEligibilityStatus: patient.acaEligibilityStatus,
     };
+    this.editErrors.set({});
     this.editing.set(true);
   }
 
   async save(patient: PatientResponse): Promise<void> {
     if (!this.draft || this.saving()) return;
+    const errors = validatePatientDraft(this.draft);
+    this.editErrors.set(errors);
+    if (Object.keys(errors).length) return;
     this.saving.set(true);
     const draft = this.draft;
     const ok = await this.store.run(async () => {
@@ -135,7 +156,7 @@ export class PatientProfileComponent {
           firstName: draft.firstName.trim(),
           lastName: draft.lastName.trim(),
           email: draft.email.trim(),
-          phone: draft.phone.trim() || undefined,
+          phone: normalizePhone(draft.phone) ?? (draft.phone.trim() || undefined),
           accountStatus: draft.accountStatus,
           acaEligibilityStatus: draft.acaEligibilityStatus,
         }),
