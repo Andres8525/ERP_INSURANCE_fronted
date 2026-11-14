@@ -6,6 +6,9 @@
   <meta name="description" content="Plataforma de operaciones para afiliaciones, pólizas y servicios de salud.">
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Abre la conexión DNS/TLS con la API (Render) antes de que Angular haga la primera petición. -->
+  <link rel="preconnect" href="https://erp-insurance-api.onrender.com" crossorigin>
+  <link rel="dns-prefetch" href="https://erp-insurance-api.onrender.com">
 </head>
 <body>
   <app-root></app-root>
