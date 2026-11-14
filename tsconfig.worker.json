@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/worker",
+    "lib": ["es2022", "webworker", "webworker.iterable"],
+    "types": []
+  },
+  "include": ["src/**/*.worker.ts", "src/**/*.shared-worker.ts"]
+}
