@@ -10,6 +10,7 @@ import { AuditPageComponent } from './features/audit/audit-page.component';
 import { LoginPageComponent } from './features/auth/login-page.component';
 import { ClaimsPageComponent } from './features/claims/claims-page.component';
 import { CloudArchiveComponent } from './features/cloud/cloud-archive.component';
+import { ClientsPageComponent } from './features/clients/clients-page.component';
 import { EnrollmentPageComponent } from './features/enrollment/enrollment-page.component';
 import { OverviewPageComponent } from './features/overview/overview-page.component';
 import { PatientProfileComponent } from './features/patient/patient-profile.component';
@@ -20,6 +21,7 @@ const VIEW_TITLES: Record<ViewKey, string> = {
   audit: 'Auditoría IA',
   claims: 'Siniestros',
   enrollment: 'Afiliaciones',
+  clients: 'Clientes CRM',
   patient: 'Pacientes',
   cloud: 'Optimización nube',
 };
@@ -33,6 +35,7 @@ const VIEW_TITLES: Record<ViewKey, string> = {
     AnomalyDetailComponent,
     ClaimsPageComponent,
     EnrollmentPageComponent,
+    ClientsPageComponent,
     PatientProfileComponent,
     CloudArchiveComponent,
   ],
