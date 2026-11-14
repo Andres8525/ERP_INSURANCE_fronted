@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { TimeoutError, catchError, throwError, timeout } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 
 /** Un arranque en frío de Render free ronda el minuto; pasado este margen se informa al usuario. */
 export const API_TIMEOUT_MS = 90_000;

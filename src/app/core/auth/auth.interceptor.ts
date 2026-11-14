@@ -1,7 +1,7 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 import { AuthService } from './auth.service';
 
 /** Adjunta `Authorization: Bearer <jwt>` a las llamadas a la API y cierra sesión ante un 401. */

@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { retry, timer } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 
 /** Estados transitorios: sin conexión (0) o el proxy de Render mientras el servicio arranca (502-504). */
 export const TRANSIENT_STATUSES = new Set([0, 502, 503, 504]);

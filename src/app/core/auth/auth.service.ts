@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, retry, tap, timer } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 import { LoginRequest, RegisterRequest, SessionResponse, TokenResponse, UserRole } from '../api/api.models';
 import { RETRY_DELAYS_MS, isTransientError } from '../api/retry.interceptor';
 

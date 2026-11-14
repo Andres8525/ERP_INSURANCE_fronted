@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 import { ServerStatusService, WAKING_THRESHOLD_MS } from './server-status.service';
 
 describe('ServerStatusService', () => {

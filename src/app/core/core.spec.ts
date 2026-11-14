@@ -1,7 +1,7 @@
 import { HttpErrorResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { environment } from '../../environments/environment';
+import { environment } from '@env/environment';
 import { TokenResponse } from './api/api.models';
 import { PatientsApi } from './api/patients.api';
 import { authInterceptor } from './auth/auth.interceptor';

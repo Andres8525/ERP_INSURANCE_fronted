@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 import {
   AccountStatus,
   AcaEligibilityStatus,

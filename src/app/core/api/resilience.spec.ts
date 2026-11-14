@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, provideHttpClient, withInterceptors } fr
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 import { AuthService } from '../auth/auth.service';
 import { RETRY_DELAYS_MS, retryInterceptor } from './retry.interceptor';
 import { API_TIMEOUT_MS, timeoutInterceptor } from './timeout.interceptor';
