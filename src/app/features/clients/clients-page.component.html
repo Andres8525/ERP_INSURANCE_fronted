@@ -1,0 +1,128 @@
+<section aria-labelledby="clients-title">
+  <div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <div>
+      <p class="text-xs font-medium text-slate-500">Gestión <span class="mx-1.5 text-slate-300">/</span> CRM</p>
+      <h1 id="clients-title" class="mt-1.5 text-[23px] font-semibold tracking-tight text-slate-900">Clientes CRM</h1>
+      <p class="mt-1 text-[13px] text-slate-500">Cartera de asegurados con su plan médico, ciudad y ficha descargable.</p>
+    </div>
+    <button
+      type="button"
+      class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
+      [disabled]="loading()"
+      (click)="load()"
+    >
+      <svg viewBox="0 0 24 24" class="size-4" [class.animate-spin]="loading()" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+        <path d="M4 4v6h6M20 20v-6h-6M5.5 15a7 7 0 0 0 12.8 2M18.5 9A7 7 0 0 0 5.7 7" />
+      </svg>
+      {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+    </button>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-4">
+    <article class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="text-[10px] font-medium text-slate-500">Clientes</p>
+      <p class="mt-2 text-2xl font-semibold tabular-nums text-slate-900">{{ stats().total }}</p>
+    </article>
+    <article class="rounded-lg border border-teal-200 bg-white p-4">
+      <p class="text-[10px] font-medium text-slate-500">Prima $0 (subsidio ACA)</p>
+      <p class="mt-2 text-2xl font-semibold tabular-nums text-teal-700">{{ stats().zero }}</p>
+    </article>
+    <article class="rounded-lg border border-amber-200 bg-white p-4">
+      <p class="text-[10px] font-medium text-slate-500">Sin plan médico</p>
+      <p class="mt-2 text-2xl font-semibold tabular-nums text-amber-700">{{ stats().noPlan }}</p>
+    </article>
+    <article class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="text-[10px] font-medium text-slate-500">Ciudades</p>
+      <p class="mt-2 text-2xl font-semibold tabular-nums text-slate-900">{{ stats().cities }}</p>
+    </article>
+  </div>
+
+  <section class="mt-5 overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <div class="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <label class="relative block w-full sm:max-w-sm">
+        <span class="sr-only">Buscar clientes</span>
+        <svg viewBox="0 0 24 24" class="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.2-4.2" />
+        </svg>
+        <input
+          class="form-input pl-8"
+          type="search"
+          name="clientQuery"
+          placeholder="CRM ID, nombre, ciudad, aseguradora o plan"
+          [ngModel]="query()"
+          (ngModelChange)="query.set($event)"
+        />
+      </label>
+      <div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar clientes">
+        <button type="button" class="filter-chip rounded border px-2.5 py-1.5 text-[10px] font-medium" [class.filter-chip-active]="filter() === 'all'" (click)="setFilter('all')">Todos</button>
+        <button type="button" class="filter-chip rounded border px-2.5 py-1.5 text-[10px] font-medium" [class.filter-chip-active]="filter() === 'zero'" (click)="setFilter('zero')">Prima $0</button>
+        <button type="button" class="filter-chip rounded border px-2.5 py-1.5 text-[10px] font-medium" [class.filter-chip-active]="filter() === 'noPlan'" (click)="setFilter('noPlan')">Sin plan</button>
+      </div>
+    </div>
+
+    @if (error(); as message) {
+      <p class="m-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-700" role="alert">{{ message }}</p>
+    }
+
+    @if (loading() && clients().length === 0) {
+      <div class="space-y-2 p-4" aria-busy="true">
+        @for (row of [1, 2, 3, 4]; track row) {
+          <div class="h-16 animate-pulse rounded-md bg-slate-100"></div>
+        }
+      </div>
+    } @else if (visible().length === 0 && !error()) {
+      <p class="p-8 text-center text-[11px] text-slate-500">No hay clientes que coincidan con la búsqueda.</p>
+    } @else {
+      <ul class="divide-y divide-slate-100">
+        @for (client of visible(); track client.id) {
+          <li class="flex flex-col gap-3 px-4 py-3.5 sm:px-5 lg:flex-row lg:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="grid size-9 shrink-0 place-items-center rounded-full bg-teal-50 text-[11px] font-semibold text-teal-800">{{ fmt.initials(client.fullName) }}</span>
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <button type="button" class="truncate text-[13px] font-semibold text-slate-900 hover:text-teal-700" (click)="patientSelected.emit(client.id)">{{ client.fullName }}</button>
+                  <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-600">{{ client.crmId }}</span>
+                  @if (client.currentPlan?.zeroPremium) {
+                    <span class="rounded bg-teal-50 px-1.5 py-0.5 text-[9px] font-semibold text-teal-700 ring-1 ring-teal-200">Prima $0</span>
+                  }
+                </div>
+                <p class="mt-1 text-[11px] leading-relaxed text-slate-600">{{ client.description }}</p>
+                <p class="mt-1 text-[10px] text-slate-400">
+                  {{ client.email }}{{ client.phone ? ' · ' + client.phone : '' }}{{ client.age !== undefined ? ' · ' + client.age + ' años' : '' }}
+                </p>
+              </div>
+            </div>
+            <dl class="grid grid-cols-3 gap-3 text-[10px] lg:w-[360px] lg:shrink-0">
+              <div>
+                <dt class="text-slate-400">Plan médico</dt>
+                <dd class="mt-0.5 font-medium text-slate-700">{{ client.currentPlan?.planName ?? 'Sin plan' }}</dd>
+                <dd class="text-slate-500">{{ client.currentPlan?.insurer ?? '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-400">Prima</dt>
+                <dd class="mt-0.5 font-medium" [class.text-teal-700]="client.currentPlan?.zeroPremium" [class.text-slate-700]="!client.currentPlan?.zeroPremium">{{ premiumLabel(client) }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-400">Ciudad</dt>
+                <dd class="mt-0.5 font-medium text-slate-700">{{ client.city ?? 'Sin registrar' }}</dd>
+                <dd class="text-slate-500">{{ fmt.eligibility(client.acaEligibilityStatus) }}</dd>
+              </div>
+            </dl>
+            <button
+              type="button"
+              class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-slate-200 px-3 text-[11px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              [disabled]="downloading() === client.id"
+              [attr.aria-label]="'Descargar PDF de ' + client.fullName"
+              (click)="downloadPdf(client)"
+            >
+              <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14" />
+              </svg>
+              {{ downloading() === client.id ? 'Generando…' : 'PDF' }}
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</section>
