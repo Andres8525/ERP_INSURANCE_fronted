@@ -10,6 +10,7 @@ import { AuditPageComponent } from './features/audit/audit-page.component';
 import { LoginPageComponent } from './features/auth/login-page.component';
 import { ClaimsPageComponent } from './features/claims/claims-page.component';
 import { CloudArchiveComponent } from './features/cloud/cloud-archive.component';
+import { WorkersMonitorPageComponent } from './features/workers-monitor/workers-monitor-page.component';
 import { ClientsPageComponent } from './features/clients/clients-page.component';
 import { EnrollmentPageComponent } from './features/enrollment/enrollment-page.component';
 import { OverviewPageComponent } from './features/overview/overview-page.component';
@@ -24,6 +25,7 @@ const VIEW_TITLES: Record<ViewKey, string> = {
   clients: 'Clientes CRM',
   patient: 'Pacientes',
   cloud: 'Optimización nube',
+  workers: 'Monitor de workers',
 };
 
 @Component({
@@ -36,6 +38,7 @@ const VIEW_TITLES: Record<ViewKey, string> = {
     ClaimsPageComponent,
     EnrollmentPageComponent,
     ClientsPageComponent,
+    WorkersMonitorPageComponent,
     PatientProfileComponent,
     CloudArchiveComponent,
   ],

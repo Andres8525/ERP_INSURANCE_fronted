@@ -1,0 +1,41 @@
+<section aria-labelledby="workers-title">
+  <div class="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+    <div>
+      <p class="text-xs font-medium text-slate-500">Sistema <span class="mx-1.5 text-slate-300">/</span> Rendimiento</p>
+      <h1 id="workers-title" class="mt-1.5 text-[23px] font-semibold tracking-tight text-slate-900">Monitor de rendimiento y workers</h1>
+      <p class="mt-1 text-[13px] text-slate-500">Paralelismo real en el navegador: prueba cada worker y comprueba que la interfaz sigue fluida.</p>
+    </div>
+    <div class="flex items-center gap-4 rounded-lg border border-slate-200 bg-white px-4 py-2.5" aria-live="polite">
+      <div>
+        <p class="metric-label">Hilo principal</p>
+        <p class="metric-value" [class.text-rose-600]="frame().fps < 30" [class.text-teal-700]="frame().fps >= 50">{{ frame().fps }} FPS</p>
+      </div>
+      <div>
+        <p class="metric-label">Frame más largo</p>
+        <p class="metric-value" [class.text-rose-600]="frame().longestFrameMs > 100">{{ frame().longestFrameMs }} ms</p>
+      </div>
+      <span class="relative grid size-8 place-items-center" aria-hidden="true">
+        <span class="absolute size-6 animate-spin rounded-full border-2 border-teal-100 border-t-teal-600"></span>
+      </span>
+    </div>
+  </div>
+
+  <div class="mb-5 flex flex-wrap gap-2">
+    <span class="rounded-full border px-3 py-1 text-[10px] font-medium" [class.border-teal-200]="capabilities.crossOriginIsolated" [class.bg-teal-50]="capabilities.crossOriginIsolated" [class.text-teal-800]="capabilities.crossOriginIsolated" [class.border-rose-200]="!capabilities.crossOriginIsolated" [class.bg-rose-50]="!capabilities.crossOriginIsolated" [class.text-rose-800]="!capabilities.crossOriginIsolated">
+      window.crossOriginIsolated === {{ capabilities.crossOriginIsolated }}
+    </span>
+    @for (badge of badges.slice(1); track badge.label) {
+      <span class="rounded-full border px-3 py-1 text-[10px]" [title]="badge.detail" [class.border-slate-200]="badge.enabled" [class.text-slate-700]="badge.enabled" [class.border-dashed]="!badge.enabled" [class.text-slate-400]="!badge.enabled">
+        {{ badge.enabled ? '✓' : '✕' }} {{ badge.label }}
+      </span>
+    }
+    <span class="rounded-full border border-slate-200 px-3 py-1 text-[10px] text-slate-700">{{ capabilities.hardwareConcurrency }} núcleos lógicos</span>
+  </div>
+
+  <div class="grid gap-5 xl:grid-cols-2">
+    <app-billing-panel />
+    <app-vitals-panel />
+    <app-session-panel />
+    <app-offline-panel />
+  </div>
+</section>

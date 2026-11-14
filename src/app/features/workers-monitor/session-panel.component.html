@@ -1,0 +1,66 @@
+<article class="flex h-full flex-col rounded-lg border border-slate-200 bg-white">
+  <header class="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
+    <div>
+      <p class="text-[10px] font-semibold uppercase tracking-wide text-teal-700">Shared Worker · MessagePort</p>
+      <h2 class="mt-0.5 text-sm font-semibold text-slate-900">Sala de espera y bloqueo de historias clínicas</h2>
+      <p class="mt-0.5 text-[10px] text-slate-500">session-sync.shared-worker.ts · un estado para todas las pestañas</p>
+    </div>
+    <span class="status-pill" [attr.data-status]="sync.mode()">{{ modeLabel() }}</span>
+  </header>
+
+  <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-2.5 text-[10px] text-slate-600">
+    <span><strong class="text-slate-900">{{ sync.tabs().length }}</strong> pestaña(s) conectada(s)</span>
+    <span class="text-slate-300">·</span>
+    <span>versión {{ sync.state().version }}</span>
+    <button type="button" class="ml-auto text-[10px] font-semibold text-teal-700 hover:underline" (click)="openTab()">Abrir otra pestaña para probar</button>
+  </div>
+
+  <form class="grid gap-2 p-4 sm:grid-cols-[1fr_1fr_auto_auto]" (ngSubmit)="add()">
+    <input class="form-input" name="queueName" placeholder="Paciente" maxlength="80" [ngModel]="name()" (ngModelChange)="name.set($event)" aria-label="Nombre del paciente" />
+    <input class="form-input" name="queueReason" placeholder="Motivo de consulta" maxlength="120" [ngModel]="reason()" (ngModelChange)="reason.set($event)" aria-label="Motivo" />
+    <select class="form-input" name="queuePriority" [ngModel]="priority()" (ngModelChange)="priority.set($event)" aria-label="Prioridad">
+      <option value="normal">Normal</option>
+      <option value="urgent">Urgente</option>
+    </select>
+    <button type="submit" class="btn-primary justify-center" [disabled]="!name().trim()">Registrar llegada</button>
+  </form>
+
+  <ul class="max-h-56 flex-1 divide-y divide-slate-100 overflow-auto border-y border-slate-100">
+    @for (p of sync.queue(); track p.id) {
+      <li class="flex items-center gap-3 px-4 py-2">
+        <span class="size-2 shrink-0 rounded-full" [class.bg-rose-500]="p.priority === 'urgent' && p.status === 'waiting'" [class.bg-teal-500]="p.priority === 'normal' && p.status === 'waiting'" [class.bg-slate-300]="p.status === 'called'"></span>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-[11px] font-medium text-slate-800" [class.line-through]="p.status === 'called'">{{ p.name }}</p>
+          <p class="truncate text-[10px] text-slate-500">
+            {{ p.reason || 'Sin motivo' }} · {{ p.status === 'called' ? 'Llamado por ' + p.calledBy : 'Espera ' + waitedMinutes(p.arrivedAt) + ' min' }}
+          </p>
+        </div>
+        @if (p.status === 'waiting') {
+          <button type="button" class="btn-secondary" (click)="call(p.id)">Llamar</button>
+        }
+        <button type="button" class="text-[10px] text-slate-400 hover:text-rose-600" [attr.aria-label]="'Quitar a ' + p.name" (click)="sync.removePatient(p.id)">Quitar</button>
+      </li>
+    } @empty {
+      <li class="px-4 py-6 text-center text-[11px] text-slate-500">La sala de espera está vacía.</li>
+    }
+  </ul>
+
+  <div class="p-4">
+    <h3 class="text-[11px] font-semibold text-slate-700">Edición exclusiva de historias clínicas</h3>
+    @if (sync.lastDenied(); as denied) {
+      <p class="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] text-amber-800" role="alert">{{ denied.recordId }} está siendo editada por {{ denied.heldBy }}.</p>
+    }
+    <ul class="mt-2 space-y-1.5">
+      @for (r of records(); track r.id) {
+        <li class="flex items-center gap-2 text-[10px]">
+          <span class="font-mono text-slate-500">{{ r.id }}</span>
+          <span class="min-w-0 flex-1 truncate text-slate-700">{{ r.label }}</span>
+          @if (sync.lockFor(r.id); as lock) {
+            <span class="truncate text-slate-500">🔒 {{ lock.owner }}</span>
+          }
+          <button type="button" class="btn-secondary" [disabled]="!!sync.lockFor(r.id) && !sync.ownsLock(r.id)" (click)="toggleLock(r.id)">{{ sync.ownsLock(r.id) ? 'Liberar' : 'Editar' }}</button>
+        </li>
+      }
+    </ul>
+  </div>
+</article>

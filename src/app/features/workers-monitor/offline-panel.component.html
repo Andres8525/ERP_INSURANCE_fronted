@@ -1,0 +1,54 @@
+<article class="flex h-full flex-col rounded-lg border border-slate-200 bg-white">
+  <header class="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
+    <div>
+      <p class="text-[10px] font-semibold uppercase tracking-wide text-teal-700">Service Worker · Cache Storage · Background Sync</p>
+      <h2 class="mt-0.5 text-sm font-semibold text-slate-900">Resiliencia offline del consultorio</h2>
+      <p class="mt-0.5 text-[10px] text-slate-500">medical-offline.sw.ts · Cache-First para catálogos y recursos, Network-First para la aplicación</p>
+    </div>
+    <span class="status-pill" [attr.data-status]="offline.state()">{{ stateLabel() }}</span>
+  </header>
+
+  <div class="grid grid-cols-2 gap-px border-b border-slate-100 bg-slate-100 sm:grid-cols-4">
+    <div class="bg-white p-3"><p class="metric-label">Red</p><p class="metric-value" [class.text-rose-700]="!offline.online()">{{ offline.online() ? 'En línea' : 'Sin conexión' }}</p></div>
+    <div class="bg-white p-3"><p class="metric-label">Controla esta página</p><p class="metric-value">{{ offline.controlled() ? 'Sí' : 'Tras recargar' }}</p></div>
+    <div class="bg-white p-3"><p class="metric-label">Versión</p><p class="metric-value truncate text-[10px]">{{ offline.status()?.version ?? '—' }}</p></div>
+    <div class="bg-white p-3"><p class="metric-label">Cola pendiente</p><p class="metric-value">{{ offline.status()?.outbox ?? 0 }}</p></div>
+  </div>
+
+  <div class="p-4">
+    <h3 class="text-[11px] font-semibold text-slate-700">Cachés</h3>
+    <ul class="mt-2 space-y-1 text-[10px]">
+      @for (cache of offline.status()?.caches ?? []; track cache.name) {
+        <li class="flex justify-between text-slate-600"><span class="truncate font-mono">{{ cache.name }}</span><span class="tabular-nums">{{ cache.entries }} entradas</span></li>
+      } @empty {
+        <li class="text-slate-500">{{ offline.supported ? 'Aún no hay cachés; precarga los catálogos.' : 'Este navegador no admite Service Workers.' }}</li>
+      }
+    </ul>
+
+    <div class="mt-3 flex flex-wrap gap-2">
+      <button type="button" class="btn-primary" [disabled]="busy() || offline.state() !== 'active'" (click)="precache()">Precargar catálogos CIE-10 y medicamentos</button>
+      <button type="button" class="btn-secondary" [disabled]="busy()" (click)="test()">Probar catálogo CIE-10</button>
+      <button type="button" class="btn-secondary" [disabled]="busy() || offline.state() !== 'active'" (click)="flush()">Sincronizar ahora</button>
+      <button type="button" class="btn-secondary" [disabled]="busy() || offline.state() !== 'active'" (click)="clear()">Vaciar cachés</button>
+    </div>
+
+    @if (probe(); as p) {
+      <p class="mt-3 rounded-md border border-teal-200 bg-teal-50/60 px-3 py-2 text-[10px] text-teal-900">
+        {{ p.entries }} códigos CIE-10 en {{ p.durationMs }} ms · {{ p.wasCached ? 'servido desde la caché (Cache-First)' : 'descargado de la red y guardado' }}
+      </p>
+    }
+    @if (message(); as text) {
+      <p class="mt-2 text-[10px] text-slate-600" role="status">{{ text }}</p>
+    }
+    @if (lastEventLabel(); as text) {
+      <p class="mt-2 text-[10px] text-amber-700" role="status">{{ text }}</p>
+    }
+    @if (offline.lastError(); as error) {
+      <p class="mt-2 text-[10px] text-rose-700" role="alert">{{ error }}</p>
+    }
+    <p class="mt-3 text-[10px] leading-relaxed text-slate-400">
+      Los datos de pacientes (PHI) no se guardan en caché. Sin conexión, los cambios de estado de siniestros se encolan con su
+      Idempotency-Key y se envían solos al volver la red; el backend descarta duplicados.
+    </p>
+  </div>
+</article>
