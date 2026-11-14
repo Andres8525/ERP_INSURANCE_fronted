@@ -46,8 +46,9 @@ src/
     core/state/          ErpStore: estado compartido con signals (la app es zoneless)
     core/ui/             etiquetas en español, formato y traducción de errores de la API
     core/validation/     reglas de correo, teléfono y fechas compartidas por los formularios
+    core/workers/        Web Worker, Shared Worker, Service Worker y memoria compartida (ver abajo)
     shared/ui/           componentes reutilizables (app-field-error)
-    features/            auth, overview, audit, claims, enrollment, clients, patient, cloud
+    features/            auth, overview, audit, claims, enrollment, clients, patient, cloud, workers-monitor
 ```
 
 Las importaciones entre capas usan alias definidos en `tsconfig.json`: `@core/*`, `@shared/*`, `@features/*` y `@env/*`.
@@ -62,14 +63,50 @@ Las importaciones entre capas usan alias definidos en `tsconfig.json`: `@core/*`
 
 ## Clientes CRM
 
-- Lista cada cliente con su **CRM ID**, una descripción breve (plan, aseguradora, prima, ciudad y elegibilidad), contacto, edad, plan médico, prima y ciudad.
+- Lista cada cliente con su **CRMID** (`CRMID-XXXXXXXX`), una descripción breve (plan, aseguradora, prima, ciudad y elegibilidad), contacto, edad, plan médico, prima y ciudad.
 - Búsqueda sin tildes por CRM ID, nombre, correo, teléfono, ciudad, aseguradora o plan, y filtros *Prima $0* y *Sin plan*.
-- El botón **PDF** descarga la ficha del cliente generada por el backend (`cliente-CRM-XXXXXXXX.pdf`); la petición lleva el token de sesión, por eso se descarga como Blob y no con un enlace directo.
+- El botón **Ver PDF** abre primero una **vista previa** de la ficha (generada por el backend con `disposition=inline`); desde ahí se descarga (`cliente-CRMID-XXXXXXXX.pdf`) sin volver a pedirla, o se abre en otra pestaña. La petición lleva el token de sesión, por eso se maneja como Blob.
 - La ciudad se registra en la afiliación y se puede editar en la ficha del paciente.
 
 ## Prima $0
 
 Con los créditos fiscales de la ACA algunos planes quedan en prima cero. La afiliación acepta `0` como prima mensual (solo rechaza valores negativos), lo indica en el formulario y el CRM marca esos clientes con la insignia *Prima $0*.
+
+## Workers y paralelismo (`src/app/core/workers/`)
+
+```text
+core/workers/
+  protocol/   rpc.ts (mensajes tipados con requestId), worker-rpc-client.ts, rpc-server.ts
+  billing/    billing-analytics.worker.ts + núcleo puro (CSV, CIE-10, estadísticas) + servicio
+  session/    session-sync.shared-worker.ts + reductor puro (sala de espera y bloqueos) + servicio
+  offline/    medical-offline.sw.ts (Service Worker) + protocolo + OfflineService
+  vitals/     vital-signs.worker.ts + layout SharedArrayBuffer/Atomics + servicio con fallback
+  worker-status.ts  detección de capacidades (crossOriginIsolated, SharedArrayBuffer, …)
+```
+
+| Módulo | API del navegador | Uso en el ERP |
+| --- | --- | --- |
+| Analítica de facturación | Web Worker + `postMessage` tipado (request/response con `requestId`, progreso, transferencia del CSV como `ArrayBuffer`) | Procesa 100.000+ registros RIPS: valida y agrupa CIE-10 por capítulo, estadísticas (media, mediana, p95, desviación), servicio, mes, edad y sexo. Si no hay soporte de Workers, se ejecuta en el hilo principal. |
+| Sincronización de sesión | Shared Worker + `MessagePort` | Una sola sala de espera para todas las pestañas (urgentes primero) y bloqueo exclusivo de edición de historias clínicas; las pestañas cerradas liberan sus bloqueos por heartbeat. Sin Shared Worker (p. ej. Chrome Android) funciona solo en la pestaña actual. |
+| Resiliencia offline | Service Worker + Cache Storage + IndexedDB + Background Sync | Cache-First para recursos con hash y catálogos CIE-10/medicamentos (`/api/catalogs`), Network-First para la navegación. Sin red, los cambios de estado de siniestros se encolan con su `Idempotency-Key` y se reenvían al volver la conexión. Los datos de pacientes no se guardan en caché. |
+| Signos vitales | `SharedArrayBuffer` + `Int32Array` + `Atomics.wait/notify/waitAsync` | ECG simulado a 250 Hz: el hilo principal escribe la ventana en memoria compartida y el worker calcula frecuencia cardiaca, picos R y RMS sin serializar. Si `window.crossOriginIsolated !== true`, usa `postMessage` con transferencia. |
+
+La vista **Monitor de workers** (menú *Sistema*) muestra si `crossOriginIsolated` está activo, las capacidades del navegador, un medidor de FPS del hilo principal y un panel para probar cada worker en vivo.
+
+Medido en Chrome con COOP/COEP: 100.000 registros analizados en el worker en ~175 ms con la interfaz a 60 FPS; el monitor de ECG detecta 71,9 lpm para un ritmo de 72; la ventana de 1.000 muestras tarda ~0,07 ms por memoria compartida frente a ~0,2 ms por `postMessage` (≈3× más rápido).
+
+### Cabeceras para `crossOriginIsolated`
+
+`SharedArrayBuffer` solo está disponible con aislamiento entre orígenes:
+
+- `vercel.json`: `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` y `Cross-Origin-Resource-Policy: same-origin` en todas las rutas; `medical-offline.sw.js` se sirve con `Cache-Control: no-cache`.
+- `angular.json` (`ng serve`): las mismas cabeceras COOP/COEP en desarrollo.
+- Recursos de otros orígenes: la API responde con `Cross-Origin-Resource-Policy: cross-origin` y CORS; Google Fonts ya envía CORP.
+
+### Build
+
+- Web Worker y Shared Worker los empaqueta Angular (`new Worker(new URL(...))`, `tsconfig.worker.json`).
+- El Service Worker necesita una URL fija en la raíz: `npm run build:sw` lo valida con `tsc -p tsconfig.sw.json` y lo compila con esbuild a `public/medical-offline.sw.js` (ignorado por git). `npm start` y `npm run build` lo ejecutan automáticamente (`prestart`/`prebuild`), también en Vercel.
 
 ## Auditoría IA con gRPC
 
