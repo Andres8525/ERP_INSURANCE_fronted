@@ -6,6 +6,7 @@ import { TokenResponse } from '../../core/api/api.models';
 import { ServerStatusService } from '../../core/api/server-status.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { apiErrorMessage } from '../../core/ui/format';
+import { emailError, isValidEmail, suggestEmail } from '../../core/validation/email.validators';
 
 interface DemoAccount {
   email: string;
@@ -15,7 +16,6 @@ interface DemoAccount {
 
 type Mode = 'login' | 'register';
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const MIN_PASSWORD_LENGTH = 12;
 /** Tras este tiempo sin respuesta se avisa de que el servidor gratuito puede estar arrancando. */
 const SLOW_REQUEST_MS = 4000;
@@ -51,7 +51,9 @@ export class LoginPageComponent implements OnDestroy {
   readonly password = signal(this.demoPassword);
   readonly confirmPassword = signal('');
 
-  readonly emailValid = computed(() => EMAIL_PATTERN.test(this.email().trim()));
+  readonly emailValid = computed(() => isValidEmail(this.email()));
+  readonly emailProblem = computed(() => emailError(this.email()));
+  readonly emailSuggestion = computed(() => suggestEmail(this.email()));
   readonly passwordLongEnough = computed(() => this.password().length >= MIN_PASSWORD_LENGTH);
   readonly passwordsMatch = computed(() => this.password() === this.confirmPassword());
   readonly canSubmit = computed(() => {
@@ -114,7 +116,7 @@ export class LoginPageComponent implements OnDestroy {
   }
 
   private validationMessage(): string {
-    if (!this.emailValid()) return 'Ingresa un correo electrónico válido.';
+    if (!this.emailValid()) return this.emailProblem() ?? 'Ingresa un correo electrónico válido.';
     if (!this.password()) return 'Ingresa tu contraseña.';
     if (!this.passwordLongEnough()) return `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`;
     return 'Las contraseñas no coinciden.';

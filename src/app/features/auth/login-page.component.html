@@ -111,7 +111,12 @@
             />
           </label>
           @if (mode() === 'register' && email() && !emailValid()) {
-            <p class="-mt-2 text-[10px] text-rose-600">Formato de correo no válido.</p>
+            <p class="-mt-2 text-[10px] text-rose-600" role="alert">
+              {{ emailProblem() }}
+              @if (emailSuggestion(); as suggestion) {
+                <button type="button" class="ml-1 font-semibold text-teal-700 underline decoration-dotted underline-offset-2" (click)="email.set(suggestion)">Usar {{ suggestion }}</button>
+              }
+            </p>
           }
 
           <label class="block text-[11px] font-medium text-slate-600">
