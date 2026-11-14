@@ -30,6 +30,7 @@ También se puede **crear una cuenta** desde la pestaña *Crear cuenta* (correo 
 | Auditoría IA | `GET /api/audit/anomalies`, `GET /api/audit/summary`, `POST /api/audit/scan` (motor gRPC), `POST /api/audit/resolve-batch` |
 | Siniestros (Kanban) | `GET /api/claims/pipeline`, `POST/PUT/DELETE /api/claims`, `PATCH /api/claims/{id}/status` |
 | Afiliaciones (stepper) | `POST /api/patients`, `POST /api/patients/{id}/policies`, `POST /api/claims` |
+| Clientes CRM | `GET /api/clients`, `GET /api/clients/{id}/pdf` |
 | Pacientes | `GET/PUT/DELETE /api/patients`, `GET/PUT/DELETE /api/patients/{id}/policies` |
 | Optimización nube | Datos ilustrativos (sin backend en el MVP) |
 
@@ -46,7 +47,7 @@ src/
     core/ui/             etiquetas en español, formato y traducción de errores de la API
     core/validation/     reglas de correo, teléfono y fechas compartidas por los formularios
     shared/ui/           componentes reutilizables (app-field-error)
-    features/            auth, overview, audit, claims, enrollment, patient, cloud
+    features/            auth, overview, audit, claims, enrollment, clients, patient, cloud
 ```
 
 Las importaciones entre capas usan alias definidos en `tsconfig.json`: `@core/*`, `@shared/*`, `@features/*` y `@env/*`.
@@ -58,6 +59,17 @@ Las importaciones entre capas usan alias definidos en `tsconfig.json`: `@core/*`
 - Correos sin extensión de dominio (`piedad@gmailcom`) se explican y se ofrece la corrección (`¿Quisiste decir piedad@gmail.com?`).
 - Los teléfonos se guardan como `(NNN) NNN-NNNN`; la fecha de nacimiento no puede ser futura ni superar 120 años.
 - Si el backend responde 400 con `errors`, el formulario vuelve al paso del campo rechazado y lo marca.
+
+## Clientes CRM
+
+- Lista cada cliente con su **CRM ID**, una descripción breve (plan, aseguradora, prima, ciudad y elegibilidad), contacto, edad, plan médico, prima y ciudad.
+- Búsqueda sin tildes por CRM ID, nombre, correo, teléfono, ciudad, aseguradora o plan, y filtros *Prima $0* y *Sin plan*.
+- El botón **PDF** descarga la ficha del cliente generada por el backend (`cliente-CRM-XXXXXXXX.pdf`); la petición lleva el token de sesión, por eso se descarga como Blob y no con un enlace directo.
+- La ciudad se registra en la afiliación y se puede editar en la ficha del paciente.
+
+## Prima $0
+
+Con los créditos fiscales de la ACA algunos planes quedan en prima cero. La afiliación acepta `0` como prima mensual (solo rechaza valores negativos), lo indica en el formulario y el CRM marca esos clientes con la insignia *Prima $0*.
 
 ## Auditoría IA con gRPC
 
