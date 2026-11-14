@@ -127,8 +127,8 @@ export function validateEnrollment(f: EnrollmentForm, today = new Date()): Recor
     monthlyPremium:
       f.monthlyPremium === null || f.monthlyPremium === undefined || Number.isNaN(f.monthlyPremium)
         ? 'Ingresa la prima mensual.'
-        : f.monthlyPremium <= 0
-          ? 'La prima debe ser mayor que 0.'
+        : f.monthlyPremium < 0
+          ? 'La prima no puede ser negativa.'
           : f.monthlyPremium > MAX_MONTHLY_PREMIUM
             ? 'La prima mensual no puede superar 10.000 USD.'
             : null,
@@ -204,6 +204,7 @@ export class EnrollmentPageComponent {
     for (const field of Object.keys(server) as EnrollmentField[]) local[field] ??= server[field] ?? null;
     return local;
   });
+  readonly zeroPremium = computed(() => this.snapshot().monthlyPremium === 0);
   readonly emailSuggestion = computed(() => suggestEmail(this.snapshot().email));
 
   readonly fplPercent = computed(() => {
@@ -301,6 +302,7 @@ export class EnrollmentPageComponent {
           lastName: f.lastName.trim(),
           email: f.email.trim(),
           phone: normalizePhone(f.phone) ?? (f.phone.trim() || undefined),
+          city: f.city.trim() || undefined,
           dateOfBirth: f.dateOfBirth,
           householdIncome: f.householdIncome ?? undefined,
           acaEligibilityStatus: this.eligibility(),

@@ -144,8 +144,13 @@
                 <app-field-error fieldId="metalLevel" [message]="errorFor('metalLevel')" />
               </label>
               <label class="form-label">Prima mensual (USD) *
-                <input class="form-input" type="number" min="0.01" step="0.01" name="monthlyPremium" placeholder="428.16" required [(ngModel)]="form.monthlyPremium" [class.form-input-invalid]="errorFor('monthlyPremium')" [attr.aria-invalid]="!!errorFor('monthlyPremium')" aria-describedby="monthlyPremium-error" />
+                <input class="form-input" type="number" min="0" step="0.01" name="monthlyPremium" placeholder="428.16" required [(ngModel)]="form.monthlyPremium" [class.form-input-invalid]="errorFor('monthlyPremium')" [attr.aria-invalid]="!!errorFor('monthlyPremium')" aria-describedby="monthlyPremium-error" />
                 <app-field-error fieldId="monthlyPremium" [message]="errorFor('monthlyPremium')" />
+                @if (zeroPremium()) {
+                  <span class="text-[10px] font-medium text-teal-700">Prima $0: el subsidio ACA cubre el total de la prima.</span>
+                } @else {
+                  <span class="text-[10px] text-slate-400">Escribe 0 si el crédito fiscal ACA cubre toda la prima.</span>
+                }
               </label>
               <label class="form-label">Inicio de cobertura *
                 <input class="form-input" type="date" name="coverageStart" required [(ngModel)]="form.coverageStart" [class.form-input-invalid]="errorFor('coverageStart')" [attr.aria-invalid]="!!errorFor('coverageStart')" aria-describedby="coverageStart-error" />
