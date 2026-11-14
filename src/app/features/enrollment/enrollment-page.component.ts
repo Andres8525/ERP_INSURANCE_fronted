@@ -8,7 +8,7 @@ import { ErpStore } from '../../core/state/erp.store';
 import { Fmt, apiErrorMessage } from '../../core/ui/format';
 import { birthDateError, coverageStartError } from '../../core/validation/date.validators';
 import { emailError, suggestEmail } from '../../core/validation/email.validators';
-import { phoneError } from '../../core/validation/phone.validators';
+import { normalizePhone, phoneError } from '../../core/validation/phone.validators';
 import { FieldErrorComponent } from '../../shared/ui/field-error.component';
 import { ViewKey } from '../../models/erp.models';
 
@@ -219,6 +219,13 @@ export class EnrollmentPageComponent {
     const name = (event.target as HTMLElement | null)?.getAttribute('name') as EnrollmentField | null;
     if (!name || !(name in FIELD_LABELS)) return;
     this.touched.update((fields) => new Set(fields).add(name));
+    if (name === 'phone') {
+      const formatted = normalizePhone(this.form.phone);
+      if (formatted && formatted !== this.form.phone) {
+        this.form.phone = formatted;
+        this.sync();
+      }
+    }
   }
 
   applyEmailSuggestion(suggestion: string): void {
@@ -270,7 +277,7 @@ export class EnrollmentPageComponent {
           firstName: f.firstName.trim(),
           lastName: f.lastName.trim(),
           email: f.email.trim(),
-          phone: f.phone.trim() || undefined,
+          phone: normalizePhone(f.phone) ?? (f.phone.trim() || undefined),
           dateOfBirth: f.dateOfBirth,
           householdIncome: f.householdIncome ?? undefined,
           acaEligibilityStatus: this.eligibility(),
