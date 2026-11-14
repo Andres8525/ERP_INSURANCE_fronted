@@ -3,6 +3,7 @@ import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { TokenResponse } from '../../core/api/api.models';
+import { ServerStatusService } from '../../core/api/server-status.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { apiErrorMessage } from '../../core/ui/format';
 
@@ -27,6 +28,8 @@ const SLOW_REQUEST_MS = 4000;
 })
 export class LoginPageComponent implements OnDestroy {
   private readonly auth = inject(AuthService);
+  /** Estado del backend (se despierta al abrir la página; ver app.config.ts). */
+  readonly server = inject(ServerStatusService);
 
   /** Usuarios creados por DemoDataSeeder en el backend. */
   readonly demoAccounts: DemoAccount[] = [

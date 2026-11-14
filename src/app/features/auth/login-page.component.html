@@ -62,6 +62,40 @@
           {{ mode() === 'login' ? 'Accede con tu cuenta corporativa.' : 'Las cuentas nuevas tienen rol de agente.' }}
         </p>
 
+        <div
+          class="mt-4 flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-[11px]"
+          [class.border-emerald-200]="server.state() === 'ready'"
+          [class.bg-emerald-50]="server.state() === 'ready'"
+          [class.text-emerald-800]="server.state() === 'ready'"
+          [class.border-amber-200]="server.state() === 'waking' || server.state() === 'checking'"
+          [class.bg-amber-50]="server.state() === 'waking' || server.state() === 'checking'"
+          [class.text-amber-800]="server.state() === 'waking' || server.state() === 'checking'"
+          [class.border-rose-200]="server.state() === 'offline'"
+          [class.bg-rose-50]="server.state() === 'offline'"
+          [class.text-rose-800]="server.state() === 'offline'"
+          role="status"
+          aria-live="polite"
+        >
+          <span class="flex items-center gap-2">
+            <span
+              class="size-2 shrink-0 rounded-full"
+              [class.bg-emerald-500]="server.state() === 'ready'"
+              [class.bg-amber-500]="server.state() === 'waking' || server.state() === 'checking'"
+              [class.animate-pulse]="server.state() === 'waking' || server.state() === 'checking'"
+              [class.bg-rose-500]="server.state() === 'offline'"
+            ></span>
+            @switch (server.state()) {
+              @case ('checking') { Conectando con el servidor… }
+              @case ('waking') { Despertando el servidor; puede tardar hasta un minuto… }
+              @case ('ready') { Servidor listo{{ server.latencyMs() !== null ? ' · ' + server.latencyMs() + ' ms' : '' }} }
+              @case ('offline') { No se pudo conectar con el servidor. }
+            }
+          </span>
+          @if (server.state() === 'offline') {
+            <button type="button" class="shrink-0 font-semibold underline underline-offset-2" (click)="server.warmUp()">Reintentar</button>
+          }
+        </div>
+
         <form class="mt-5 space-y-4" novalidate (ngSubmit)="submit()">
           <label class="block text-[11px] font-medium text-slate-600">
             Correo electrónico
