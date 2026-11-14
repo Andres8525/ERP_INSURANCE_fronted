@@ -6,6 +6,7 @@ import { ClientsApi } from '@core/api/clients.api';
 import { ErpStore } from '@core/state/erp.store';
 import { saveBlob } from '@core/ui/download';
 import { Fmt, apiErrorMessage } from '@core/ui/format';
+import { PdfPreviewComponent, PdfPreviewState } from './pdf-preview.component';
 
 export type ClientFilter = 'all' | 'zero' | 'noPlan';
 
@@ -37,7 +38,7 @@ export function matchesClient(client: ClientSummary, query: string, filter: Clie
 
 @Component({
   selector: 'app-clients-page',
-  imports: [FormsModule],
+  imports: [FormsModule, PdfPreviewComponent],
   templateUrl: './clients-page.component.html',
 })
 export class ClientsPageComponent {
@@ -52,6 +53,7 @@ export class ClientsPageComponent {
   readonly query = signal('');
   readonly filter = signal<ClientFilter>('all');
   readonly downloading = signal<string | null>(null);
+  readonly preview = signal<PdfPreviewState | null>(null);
 
   readonly visible = computed(() => this.clients().filter((c) => matchesClient(c, this.query(), this.filter())));
   readonly stats = computed(() => {
@@ -93,17 +95,36 @@ export class ClientsPageComponent {
     return plan.zeroPremium ? '$0 · subsidio ACA' : `${Fmt.money(plan.premiumAmount)}/mes`;
   }
 
-  async downloadPdf(client: ClientSummary): Promise<void> {
+  async openPreview(client: ClientSummary): Promise<void> {
     if (this.downloading()) return;
     this.downloading.set(client.id);
+    this.preview.set({ client, blob: null, loading: true, error: null });
     try {
-      const blob = await firstValueFrom(this.api.pdf(client.id));
-      saveBlob(blob, `cliente-${client.crmId}.pdf`);
-      this.store.notify({ kind: 'success', text: `Ficha PDF de ${client.fullName} descargada.` });
+      const blob = await firstValueFrom(this.api.pdf(client.id, 'inline'));
+      if (this.preview()?.client.id === client.id) this.preview.set({ client, blob, loading: false, error: null });
     } catch (err) {
-      this.store.notify({ kind: 'error', text: `No se pudo generar el PDF: ${apiErrorMessage(err)}` });
+      if (this.preview()?.client.id === client.id) {
+        this.preview.set({ client, blob: null, loading: false, error: `No se pudo generar el PDF: ${apiErrorMessage(err)}` });
+      }
     } finally {
       this.downloading.set(null);
     }
+  }
+
+  retryPreview(): void {
+    const current = this.preview();
+    if (current) void this.openPreview(current.client);
+  }
+
+  downloadPreview(): void {
+    const current = this.preview();
+    if (!current?.blob) return;
+    saveBlob(current.blob, `cliente-${current.client.crmId}.pdf`);
+    this.store.notify({ kind: 'success', text: `Ficha PDF de ${current.client.fullName} descargada.` });
+    this.closePreview();
+  }
+
+  closePreview(): void {
+    this.preview.set(null);
   }
 }
