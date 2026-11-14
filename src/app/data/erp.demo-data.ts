@@ -1,13 +1,4 @@
-import { CloudArchiveCandidate, NavigationItem } from '../models/erp.models';
-
-export const NAVIGATION_ITEMS: NavigationItem[] = [
-  { key: 'overview', label: 'Resumen', icon: 'grid', section: 'OPERACIONES' },
-  { key: 'audit', label: 'Auditoría IA', icon: 'scan', section: 'OPERACIONES', requiresAudit: true },
-  { key: 'claims', label: 'Siniestros', icon: 'file', section: 'OPERACIONES' },
-  { key: 'enrollment', label: 'Afiliaciones', icon: 'users', section: 'GESTIÓN' },
-  { key: 'patient', label: 'Pacientes', icon: 'user', section: 'GESTIÓN' },
-  { key: 'cloud', label: 'Optimización nube', icon: 'cloud', section: 'SISTEMA' },
-];
+import { CloudArchiveCandidate } from '../models/erp.models';
 
 /** La optimización de nube no tiene backend en el MVP: se muestra con datos ilustrativos. */
 export const CLOUD_ARCHIVE_DEMO: CloudArchiveCandidate[] = [

@@ -11,7 +11,7 @@ import { birthDateError, coverageStartError } from '../../core/validation/date.v
 import { emailError, suggestEmail } from '../../core/validation/email.validators';
 import { normalizePhone, phoneError } from '../../core/validation/phone.validators';
 import { FieldErrorComponent } from '../../shared/ui/field-error.component';
-import { ViewKey } from '../../models/erp.models';
+import { ViewKey } from '../../core/layout/navigation';
 
 export interface EnrollmentForm {
   firstName: string;

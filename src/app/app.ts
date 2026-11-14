@@ -4,7 +4,7 @@ import { ServerStatusService } from './core/api/server-status.service';
 import { AuthService } from './core/auth/auth.service';
 import { ErpStore } from './core/state/erp.store';
 import { Fmt } from './core/ui/format';
-import { CLOUD_ARCHIVE_DEMO, NAVIGATION_ITEMS } from './data/erp.demo-data';
+import { CLOUD_ARCHIVE_DEMO } from './data/erp.demo-data';
 import { AnomalyDetailComponent } from './features/audit/anomaly-detail.component';
 import { AuditPageComponent } from './features/audit/audit-page.component';
 import { LoginPageComponent } from './features/auth/login-page.component';
@@ -13,7 +13,7 @@ import { CloudArchiveComponent } from './features/cloud/cloud-archive.component'
 import { EnrollmentPageComponent } from './features/enrollment/enrollment-page.component';
 import { OverviewPageComponent } from './features/overview/overview-page.component';
 import { PatientProfileComponent } from './features/patient/patient-profile.component';
-import { ViewKey } from './models/erp.models';
+import { NAVIGATION_ITEMS, ViewKey } from './core/layout/navigation';
 
 const VIEW_TITLES: Record<ViewKey, string> = {
   overview: 'Resumen',
