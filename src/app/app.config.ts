@@ -7,6 +7,7 @@ import { retryInterceptor } from './core/api/retry.interceptor';
 import { ServerStatusService } from './core/api/server-status.service';
 import { timeoutInterceptor } from './core/api/timeout.interceptor';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { OfflineService } from './core/workers/offline/offline.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,6 +19,7 @@ export const appConfig: ApplicationConfig = {
       const server = inject(ServerStatusService);
       void server.warmUp();
       server.startKeepAlive();
+      void inject(OfflineService).register();
     }),
   ],
 };
