@@ -23,6 +23,9 @@ export class OverviewPageComponent {
     .replace(/^./, (c) => c.toUpperCase());
   readonly nextYear = new Date().getFullYear() + 1;
 
+  /** Primera carga en curso: se muestran esqueletos en lugar de ceros provisionales. */
+  readonly firstLoad = computed(() => this.store.loading() && this.store.lastSync() === null);
+
   readonly metrics = computed(() => {
     const patients = this.store.patients();
     const active = [...this.store.pipeline().OPEN, ...this.store.pipeline().IN_REVIEW];
