@@ -5,13 +5,14 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { retryInterceptor } from './core/api/retry.interceptor';
 import { ServerStatusService } from './core/api/server-status.service';
+import { timeoutInterceptor } from './core/api/timeout.interceptor';
 import { authInterceptor } from './core/auth/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor, retryInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, retryInterceptor, timeoutInterceptor])),
     // Despierta el backend en cuanto se abre la página (sin bloquear el arranque): mientras el usuario
     // escribe sus credenciales, Render ya está levantando el servicio.
     provideAppInitializer(() => {
