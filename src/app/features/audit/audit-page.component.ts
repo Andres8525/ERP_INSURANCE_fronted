@@ -62,12 +62,16 @@ export class AuditPageComponent {
     if (ok) this.selectedIds.set(new Set());
   }
 
+  readonly lastScan = this.store.lastScan;
+
+  engineLabel(mode: 'REMOTE' | 'IN_PROCESS'): string {
+    return mode === 'REMOTE' ? 'microservicio gRPC' : 'motor gRPC en proceso';
+  }
+
   async rescan(): Promise<void> {
+    if (this.busy()) return;
     this.busy.set('scan');
-    await this.store.run(async () => {
-      await this.store.loadAudit();
-      return `Análisis completado: ${this.store.anomalies().length} hallazgos abiertos.`;
-    });
+    await this.store.scanAnomalies();
     this.busy.set(null);
   }
 }
