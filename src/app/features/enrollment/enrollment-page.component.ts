@@ -1,7 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { AcaEligibilityStatus, PatientResponse } from '../../core/api/api.models';
+import { AcaEligibilityStatus, PatientResponse, ProblemDetail } from '../../core/api/api.models';
 import { ClaimsApi } from '../../core/api/claims.api';
 import { PatientsApi } from '../../core/api/patients.api';
 import { ErpStore } from '../../core/state/erp.store';
@@ -84,6 +85,25 @@ function requiredName(value: string, label: string): string | null {
   const text = value.trim();
   if (!text) return `Ingresa el ${label.toLowerCase()}.`;
   return text.length > 100 ? 'Máximo 100 caracteres.' : null;
+}
+
+const SERVER_MESSAGES: Partial<Record<EnrollmentField, string>> = {
+  email: 'El servidor rechazó el correo: usa un dominio completo, por ejemplo nombre@correo.com.',
+  phone: 'El servidor rechazó el teléfono: usa solo números, espacios, paréntesis o guiones.',
+  dateOfBirth: 'El servidor rechazó la fecha de nacimiento.',
+};
+
+export function serverFieldErrors(error: unknown): Partial<Record<EnrollmentField, string>> {
+  if (!(error instanceof HttpErrorResponse) || error.status !== 400) return {};
+  const problem = error.error as Partial<ProblemDetail> | null;
+  const result: Partial<Record<EnrollmentField, string>> = {};
+  for (const [field, message] of Object.entries(problem?.errors ?? {})) {
+    if (field in FIELD_LABELS) {
+      const key = field as EnrollmentField;
+      result[key] = SERVER_MESSAGES[key] ?? `Valor rechazado por el servidor (${message}).`;
+    }
+  }
+  return result;
 }
 
 export function validateEnrollment(f: EnrollmentForm, today = new Date()): Record<EnrollmentField, string | null> {
@@ -181,7 +201,14 @@ export class EnrollmentPageComponent {
   private readonly attemptedSteps = signal<ReadonlySet<number>>(new Set());
   private readonly touched = signal<ReadonlySet<EnrollmentField>>(new Set());
 
-  readonly fieldErrors = computed(() => validateEnrollment(this.snapshot()));
+  private readonly serverErrors = signal<Partial<Record<EnrollmentField, string>>>({});
+
+  readonly fieldErrors = computed(() => {
+    const local = validateEnrollment(this.snapshot());
+    const server = this.serverErrors();
+    for (const field of Object.keys(server) as EnrollmentField[]) local[field] ??= server[field] ?? null;
+    return local;
+  });
   readonly emailSuggestion = computed(() => suggestEmail(this.snapshot().email));
 
   readonly fplPercent = computed(() => {
@@ -199,6 +226,7 @@ export class EnrollmentPageComponent {
 
   sync(): void {
     this.snapshot.set({ ...this.form, services: { ...this.form.services } });
+    if (Object.keys(this.serverErrors()).length) this.serverErrors.set({});
   }
 
   invalidFields(step: number): EnrollmentField[] {
@@ -310,6 +338,17 @@ export class EnrollmentPageComponent {
       this.created.set(patient);
       this.store.notify({ kind: 'success', text: `${patient.firstName} ${patient.lastName} afiliado correctamente.` });
     } catch (err) {
+      const rejected = patient ? {} : serverFieldErrors(err);
+      const fields = Object.keys(rejected) as EnrollmentField[];
+      if (fields.length) {
+        this.serverErrors.set(rejected);
+        const step = Number(Object.keys(STEP_FIELDS).find((key) => STEP_FIELDS[Number(key)].includes(fields[0])));
+        this.attemptedSteps.update((steps) => new Set(steps).add(step));
+        this.step.set(step);
+        this.error.set('El servidor rechazó algunos datos. Revisa los campos marcados.');
+        this.focusField(fields[0]);
+        return;
+      }
       const message = apiErrorMessage(err);
       this.error.set(patient ? `Paciente creado, pero falló un paso posterior: ${message}` : message);
       if (patient) void this.store.loadPatients();
@@ -325,6 +364,7 @@ export class EnrollmentPageComponent {
     this.error.set(null);
     this.attemptedSteps.set(new Set());
     this.touched.set(new Set());
+    this.serverErrors.set({});
     this.step.set(1);
   }
 }
