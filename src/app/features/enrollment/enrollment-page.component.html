@@ -11,7 +11,7 @@
         <span class="mx-auto grid size-12 place-items-center rounded-full bg-teal-50 text-xl text-teal-700">✓</span>
         <h2 class="mt-4 text-base font-semibold text-slate-900">Afiliación registrada</h2>
         <p class="mt-1 text-[12px] text-slate-500">
-          {{ patient.firstName }} {{ patient.lastName }} · {{ fmt.memberId(patient.id) }} · {{ fmt.eligibility(patient.acaEligibilityStatus) }}
+          {{ patient.firstName }} {{ patient.lastName }} · {{ patient.crmId }} · {{ fmt.eligibility(patient.acaEligibilityStatus) }}
         </p>
         <p class="mt-1 text-[11px] text-slate-400">Póliza creada en estado pendiente{{ hasServices() ? ' y servicios enviados al pipeline de siniestros' : '' }}.</p>
         <div class="mt-6 flex flex-wrap justify-center gap-2">

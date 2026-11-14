@@ -42,7 +42,7 @@
               <span class="grid size-12 place-items-center rounded-full bg-[#e6edf7] text-sm font-semibold text-[#1e3a8a]">{{ fmt.initials(patient.firstName + ' ' + patient.lastName) }}</span>
               <div>
                 <h2 class="text-base font-semibold text-slate-900">{{ patient.firstName }} {{ patient.lastName }}</h2>
-                <p class="mt-0.5 text-[11px] text-slate-500">{{ fmt.memberId(patient.id) }} · Alta {{ fmt.date(patient.createdAt) }}</p>
+                <p class="mt-0.5 text-[11px] text-slate-500"><span class="font-mono font-semibold text-slate-600">{{ patient.crmId }}</span>{{ patient.city ? ' · ' + patient.city : '' }} · Alta {{ fmt.date(patient.createdAt) }}</p>
               </div>
             </div>
             @if (!editing()) {
@@ -90,6 +90,8 @@
             <dl class="grid gap-4 p-5 text-[11px] sm:grid-cols-3">
               <div><dt class="text-[9px] text-slate-400">Correo</dt><dd class="mt-1 break-all font-medium text-slate-700">{{ patient.email }}</dd></div>
               <div><dt class="text-[9px] text-slate-400">Teléfono</dt><dd class="mt-1 font-medium text-slate-700">{{ patient.phone ?? '—' }}</dd></div>
+              <div><dt class="text-[9px] text-slate-400">Ciudad</dt><dd class="mt-1 font-medium text-slate-700">{{ patient.city ?? '—' }}</dd></div>
+              <div><dt class="text-[9px] text-slate-400">CRM ID</dt><dd class="mt-1 font-mono font-medium text-slate-700">{{ patient.crmId }}</dd></div>
               <div><dt class="text-[9px] text-slate-400">Fecha de nacimiento</dt><dd class="mt-1 font-medium text-slate-700">{{ fmt.date(patient.dateOfBirth) }}</dd></div>
               <div><dt class="text-[9px] text-slate-400">Ingreso del hogar</dt><dd class="mt-1 font-medium text-slate-700">{{ fmt.money(patient.householdIncome) }}</dd></div>
               <div><dt class="text-[9px] text-slate-400">Estado de cuenta</dt><dd class="mt-1 font-medium text-slate-700">{{ fmt.accountStatus(patient.accountStatus) }}</dd></div>

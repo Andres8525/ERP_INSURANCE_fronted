@@ -65,7 +65,7 @@ export class PatientProfileComponent {
     const q = this.query().trim().toLowerCase();
     const all = this.store.patients();
     if (!q) return all;
-    return all.filter((p) => `${p.firstName} ${p.lastName} ${p.email}`.toLowerCase().includes(q));
+    return all.filter((p) => `${p.firstName} ${p.lastName} ${p.email} ${p.crmId} ${p.city ?? ''}`.toLowerCase().includes(q));
   });
   readonly selected = computed(() => this.store.patients().find((p) => p.id === this.selectedId()) ?? null);
   readonly claims = computed(() => this.store.allClaims().filter((c) => c.patient.id === this.selectedId()));
