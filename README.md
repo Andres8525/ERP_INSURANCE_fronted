@@ -55,6 +55,17 @@ npm test -- --watch=false    # Vitest: integración HTTP con HttpTestingControll
 npm run build                # build de producción en dist/
 ```
 
+## Rendimiento y disponibilidad
+
+El backend corre en Render free, que suspende el servicio tras ~15 min sin tráfico. La app lo compensa:
+
+- **Despertar al abrir:** al cargar la página se llama a `/actuator/health` (`ServerStatusService`); mientras el usuario escribe sus credenciales, Render ya está arrancando. `index.html` además hace `preconnect` al dominio de la API.
+- **Estado visible:** el login y el menú lateral muestran si el servidor está conectando, despertando, listo (con latencia) o sin conexión, con botón de reintento.
+- **Keep-alive:** con la app abierta y la pestaña visible se hace ping cada 10 min.
+- **Reintentos:** las lecturas (GET) y el login se reintentan ante 0/502/503/504 (1 s y 3 s); las escrituras no, para no duplicar operaciones. Tiempo límite de 90 s por llamada.
+- **Recuperación:** si el servidor vuelve tras una caída, los datos se recargan solos.
+- **Carga diferida:** auditoría, siniestros, afiliaciones, pacientes y nube se cargan con `@defer`; el bundle inicial bajó de ~456 kB a ~394 kB.
+
 ## Despliegue en Vercel
 
 La app está en la raíz del repositorio y [vercel.json](vercel.json) fija instalación (`npm ci`), build (`npm run build`), carpeta de salida (`dist/Erp_Insurance/browser`), redirección de rutas a `index.html` y cabeceras de caché y seguridad.
