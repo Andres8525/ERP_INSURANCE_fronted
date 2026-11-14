@@ -4,4 +4,6 @@
 export const environment = {
   production: true,
   apiUrl: 'https://erp-insurance-api.onrender.com/api',
+  /** Health check público del backend: se usa para despertar el servidor y saber si está disponible. */
+  healthUrl: 'https://erp-insurance-api.onrender.com/actuator/health',
 };
