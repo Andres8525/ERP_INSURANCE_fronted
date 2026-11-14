@@ -36,7 +36,6 @@ const emptyDraft = (): ClaimDraft => ({
   service: '',
 });
 
-/** Pipeline Kanban de siniestros: GET /api/claims/pipeline + CRUD /api/claims. */
 @Component({
   selector: 'app-claims-page',
   imports: [FormsModule],
@@ -78,7 +77,6 @@ export class ClaimsPageComponent {
     this.movingId.set(null);
   }
 
-  // --- Drag & drop nativo HTML5 ---
   onDragStart(event: DragEvent, claim: ClaimResponse): void {
     this.dragging.set(claim);
     event.dataTransfer?.setData('text/plain', claim.id);
@@ -104,7 +102,6 @@ export class ClaimsPageComponent {
     this.dropTarget.set(null);
   }
 
-  // --- Alta ---
   openCreate(): void {
     this.draft = emptyDraft();
     this.draft.patientId = this.store.patients()[0]?.id ?? '';

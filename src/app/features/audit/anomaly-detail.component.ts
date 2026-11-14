@@ -3,7 +3,6 @@ import { AnomalyResponse, BatchResolutionAction } from '@core/api/api.models';
 import { ErpStore } from '@core/state/erp.store';
 import { Fmt } from '@core/ui/format';
 
-/** Panel de comparación de registros de una anomalía y su resolución individual. */
 @Component({
   selector: 'app-anomaly-detail',
   templateUrl: './anomaly-detail.component.html',

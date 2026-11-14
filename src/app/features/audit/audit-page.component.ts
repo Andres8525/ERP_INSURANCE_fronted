@@ -3,7 +3,6 @@ import { AnomalyResponse, AnomalySeverity, BatchResolutionAction } from '@core/a
 import { ErpStore } from '@core/state/erp.store';
 import { Fmt } from '@core/ui/format';
 
-/** Bandeja de anomalías (módulo IA simulado): GET /api/audit/anomalies + POST /api/audit/resolve-batch. */
 @Component({
   selector: 'app-audit-page',
   templateUrl: './audit-page.component.html',

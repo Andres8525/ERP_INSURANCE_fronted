@@ -17,10 +17,9 @@ interface DemoAccount {
 type Mode = 'login' | 'register';
 
 export const MIN_PASSWORD_LENGTH = 12;
-/** Tras este tiempo sin respuesta se avisa de que el servidor gratuito puede estar arrancando. */
+
 const SLOW_REQUEST_MS = 4000;
 
-/** Inicio de sesión y registro de cuentas (POST /api/auth/login y /api/auth/register). */
 @Component({
   selector: 'app-login-page',
   imports: [FormsModule],
@@ -28,10 +27,9 @@ const SLOW_REQUEST_MS = 4000;
 })
 export class LoginPageComponent implements OnDestroy {
   private readonly auth = inject(AuthService);
-  /** Estado del backend (se despierta al abrir la página; ver app.config.ts). */
+
   readonly server = inject(ServerStatusService);
 
-  /** Usuarios creados por DemoDataSeeder en el backend. */
   readonly demoAccounts: DemoAccount[] = [
     { email: 'admin@nexo.demo', role: 'Administrador', hint: 'Acceso total' },
     { email: 'auditor@nexo.demo', role: 'Auditor', hint: 'Auditoría IA' },
@@ -46,7 +44,6 @@ export class LoginPageComponent implements OnDestroy {
   readonly error = signal<string | null>(null);
   readonly showPassword = signal(false);
 
-  // Campos del formulario (señales para validar en vivo con detección de cambios zoneless).
   readonly email = signal('admin@nexo.demo');
   readonly password = signal(this.demoPassword);
   readonly confirmPassword = signal('');

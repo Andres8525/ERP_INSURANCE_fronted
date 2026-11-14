@@ -34,7 +34,6 @@ type EditDraft = Required<Pick<UpdatePatientRequest, 'firstName' | 'lastName' | 
   acaEligibilityStatus: AcaEligibilityStatus;
 };
 
-/** Pacientes: listado + ficha (GET/PUT/DELETE /api/patients, GET /api/patients/{id}/policies). */
 @Component({
   selector: 'app-patient-profile',
   imports: [FormsModule, FieldErrorComponent],
@@ -45,7 +44,6 @@ export class PatientProfileComponent {
   private readonly patientsApi = inject(PatientsApi);
   readonly fmt = Fmt;
 
-  /** Paciente a seleccionar al abrir la vista (p. ej. recién afiliado). */
   readonly focusPatientId = input<string | null>(null);
 
   readonly query = signal('');
@@ -74,7 +72,6 @@ export class PatientProfileComponent {
   readonly anomalies = computed(() => this.store.anomalies().filter((a) => a.patient?.id === this.selectedId()));
 
   constructor() {
-    // Selección inicial: el paciente enfocado o el primero de la lista.
     effect(() => {
       const focus = this.focusPatientId();
       const patients = this.store.patients();
@@ -107,7 +104,6 @@ export class PatientProfileComponent {
     }
   }
 
-  /** PUT /api/patients/{id}/policies/{policyId}: el backend rechaza (409) si la vigencia se solapa. */
   async changePolicyStatus(policy: PolicyResponse, status: PolicyStatus): Promise<void> {
     if (policy.status === status || this.policyBusy()) return;
     this.policyBusy.set(policy.id);

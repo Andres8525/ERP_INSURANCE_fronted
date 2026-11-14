@@ -5,7 +5,6 @@ import { ErpStore } from '@core/state/erp.store';
 import { Fmt } from '@core/ui/format';
 import { ViewKey } from '@core/layout/navigation';
 
-/** Resumen operativo con métricas calculadas a partir de los datos del backend. */
 @Component({
   selector: 'app-overview-page',
   templateUrl: './overview-page.component.html',
@@ -23,7 +22,6 @@ export class OverviewPageComponent {
     .replace(/^./, (c) => c.toUpperCase());
   readonly nextYear = new Date().getFullYear() + 1;
 
-  /** Primera carga en curso: se muestran esqueletos en lugar de ceros provisionales. */
   readonly firstLoad = computed(() => this.store.loading() && this.store.lastSync() === null);
 
   readonly metrics = computed(() => {
@@ -48,7 +46,6 @@ export class OverviewPageComponent {
     };
   });
 
-  /** % de pacientes sin hallazgos abiertos. */
   readonly quality = computed(() => {
     const total = this.store.patients().length;
     if (total === 0) return 100;

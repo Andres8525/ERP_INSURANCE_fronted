@@ -30,7 +30,6 @@ export interface EnrollmentForm {
   services: Record<string, boolean>;
 }
 
-/** Guías federales de pobreza (48 estados) usadas para la estimación ACA del MVP. */
 const FPL_BASE = 15_650;
 const FPL_PER_PERSON = 5_500;
 
@@ -165,10 +164,6 @@ function emptyForm(): EnrollmentForm {
   };
 }
 
-/**
- * Stepper de afiliación. Al completar:
- * POST /api/patients → POST /api/patients/{id}/policies → (si hay servicios) POST /api/claims.
- */
 @Component({
   selector: 'app-enrollment-page',
   imports: [FormsModule, FieldErrorComponent],
@@ -195,7 +190,7 @@ export class EnrollmentPageComponent {
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly created = signal<PatientResponse | null>(null);
-  /** Copia en señal del formulario para que los `computed` reaccionen (zoneless). */
+
   private readonly snapshot = signal<EnrollmentForm>(emptyForm());
   form: EnrollmentForm = emptyForm();
   private readonly attemptedSteps = signal<ReadonlySet<number>>(new Set());
