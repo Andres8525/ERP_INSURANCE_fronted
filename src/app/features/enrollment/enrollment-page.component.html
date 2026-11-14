@@ -68,6 +68,12 @@
             <label class="form-label">Correo electrónico *
               <input autocomplete="email" class="form-input" type="email" name="email" maxlength="320" placeholder="nombre@correo.com" required [(ngModel)]="form.email" [class.form-input-invalid]="errorFor('email')" [attr.aria-invalid]="!!errorFor('email')" aria-describedby="email-error" />
               <app-field-error fieldId="email" [message]="errorFor('email')" />
+              @if (emailSuggestion(); as suggestion) {
+                <span class="text-[10px] text-slate-600" aria-live="polite">
+                  ¿Quisiste decir
+                  <button type="button" class="font-semibold text-teal-700 underline decoration-dotted underline-offset-2 hover:text-teal-900" (click)="applyEmailSuggestion(suggestion)">{{ suggestion }}</button>?
+                </span>
+              }
             </label>
             <label class="form-label">Teléfono móvil
               <input autocomplete="tel-national" class="form-input" type="tel" name="phone" maxlength="32" placeholder="(305) 555-0100" [(ngModel)]="form.phone" [class.form-input-invalid]="errorFor('phone')" [attr.aria-invalid]="!!errorFor('phone')" aria-describedby="phone-error" />

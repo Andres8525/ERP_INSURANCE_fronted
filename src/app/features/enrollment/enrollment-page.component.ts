@@ -7,7 +7,7 @@ import { PatientsApi } from '../../core/api/patients.api';
 import { ErpStore } from '../../core/state/erp.store';
 import { Fmt, apiErrorMessage } from '../../core/ui/format';
 import { birthDateError, coverageStartError } from '../../core/validation/date.validators';
-import { emailError } from '../../core/validation/email.validators';
+import { emailError, suggestEmail } from '../../core/validation/email.validators';
 import { phoneError } from '../../core/validation/phone.validators';
 import { FieldErrorComponent } from '../../shared/ui/field-error.component';
 import { ViewKey } from '../../models/erp.models';
@@ -181,6 +181,7 @@ export class EnrollmentPageComponent {
   private readonly attemptedSteps = signal<ReadonlySet<number>>(new Set());
 
   readonly fieldErrors = computed(() => validateEnrollment(this.snapshot()));
+  readonly emailSuggestion = computed(() => suggestEmail(this.snapshot().email));
 
   readonly fplPercent = computed(() => {
     const { householdSize, householdIncome } = this.snapshot();
@@ -211,6 +212,12 @@ export class EnrollmentPageComponent {
   errorFor(field: EnrollmentField): string | null {
     const step = Number(Object.keys(STEP_FIELDS).find((key) => STEP_FIELDS[Number(key)].includes(field)));
     return this.attemptedSteps().has(step) ? this.fieldErrors()[field] : null;
+  }
+
+  applyEmailSuggestion(suggestion: string): void {
+    this.form.email = suggestion;
+    this.sync();
+    if (this.error()?.startsWith(FIELD_LABELS.email)) this.error.set(null);
   }
 
   private focusField(field: EnrollmentField): void {
