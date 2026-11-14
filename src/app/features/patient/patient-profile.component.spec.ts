@@ -17,6 +17,11 @@ describe('validatePatientDraft', () => {
     expect(errors.phone).toContain('10 dígitos');
   });
 
+  it('limita la longitud de la ciudad', () => {
+    const errors = validatePatientDraft({ firstName: 'Ana', lastName: 'Ruiz', email: 'ana@correo.com', phone: '', city: 'x'.repeat(121) });
+    expect(errors.city).toBe('Máximo 120 caracteres.');
+  });
+
   it('el teléfono vacío es válido porque es opcional', () => {
     expect(validatePatientDraft({ firstName: 'Ana', lastName: 'Ruiz', email: 'ana@correo.com', phone: '' })).toEqual({});
   });

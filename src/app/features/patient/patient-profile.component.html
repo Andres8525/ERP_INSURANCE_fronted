@@ -71,6 +71,10 @@
                 <input class="form-input" name="phone" maxlength="32" [(ngModel)]="draft.phone" [class.form-input-invalid]="editErrors().phone" [attr.aria-invalid]="!!editErrors().phone" aria-describedby="edit-phone-error" />
                 <app-field-error fieldId="edit-phone" [message]="editErrors().phone" />
               </label>
+              <label class="form-label">Ciudad
+                <input class="form-input" name="city" maxlength="120" placeholder="Miami" [(ngModel)]="draft.city" [class.form-input-invalid]="editErrors().city" [attr.aria-invalid]="!!editErrors().city" aria-describedby="edit-city-error" />
+                <app-field-error fieldId="edit-city" [message]="editErrors().city" />
+              </label>
               <label class="form-label">Estado de cuenta
                 <select class="form-input" name="accountStatus" [(ngModel)]="draft.accountStatus">
                   @for (status of accountStatuses; track status) { <option [value]="status">{{ fmt.accountStatus(status) }}</option> }

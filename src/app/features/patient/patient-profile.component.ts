@@ -16,7 +16,7 @@ import { emailError } from '@core/validation/email.validators';
 import { normalizePhone, phoneError } from '@core/validation/phone.validators';
 import { FieldErrorComponent } from '@shared/ui/field-error.component';
 
-type EditField = 'firstName' | 'lastName' | 'email' | 'phone';
+type EditField = 'firstName' | 'lastName' | 'email' | 'phone' | 'city';
 
 export function validatePatientDraft(draft: Pick<UpdatePatientRequest, EditField>): Partial<Record<EditField, string>> {
   const errors: Partial<Record<EditField, string>> = {};
@@ -26,10 +26,11 @@ export function validatePatientDraft(draft: Pick<UpdatePatientRequest, EditField
   if (email) errors.email = email;
   const phone = phoneError(draft.phone);
   if (phone) errors.phone = phone;
+  if ((draft.city ?? '').trim().length > 120) errors.city = 'Máximo 120 caracteres.';
   return errors;
 }
 
-type EditDraft = Required<Pick<UpdatePatientRequest, 'firstName' | 'lastName' | 'email' | 'phone'>> & {
+type EditDraft = Required<Pick<UpdatePatientRequest, 'firstName' | 'lastName' | 'email' | 'phone' | 'city'>> & {
   accountStatus: AccountStatus;
   acaEligibilityStatus: AcaEligibilityStatus;
 };
@@ -132,6 +133,7 @@ export class PatientProfileComponent {
       lastName: patient.lastName,
       email: patient.email,
       phone: patient.phone ?? '',
+      city: patient.city ?? '',
       accountStatus: patient.accountStatus,
       acaEligibilityStatus: patient.acaEligibilityStatus,
     };
@@ -153,6 +155,7 @@ export class PatientProfileComponent {
           lastName: draft.lastName.trim(),
           email: draft.email.trim(),
           phone: normalizePhone(draft.phone) ?? (draft.phone.trim() || undefined),
+          city: draft.city.trim(),
           accountStatus: draft.accountStatus,
           acaEligibilityStatus: draft.acaEligibilityStatus,
         }),
