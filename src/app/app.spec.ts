@@ -27,7 +27,7 @@ const token: TokenResponse = {
 
 const patient: PatientResponse = {
   id: 'p-1',
-  crmId: 'CRM-7K2M9QXB',
+  crmId: 'CRMID-7K2M9QXB',
   firstName: 'María',
   lastName: 'González',
   email: 'maria@example.test',
