@@ -265,12 +265,33 @@ export interface AuditSummaryResponse {
   resolvedThisMonth: number;
 }
 
+export type AiUnavailableReason = 'NOT_CONFIGURED' | 'UNAUTHORIZED' | 'NO_CREDITS' | 'RATE_LIMITED' | 'TIMEOUT' | 'PROVIDER_ERROR';
+
+export interface AiStatusResponse {
+  enabled: boolean;
+  provider: string;
+  model: string;
+}
+
+export interface AiInsightResponse {
+  content: string;
+  provider: string;
+  model: string;
+  analyzedAnomalies: number;
+  promptTokens: number;
+  completionTokens: number;
+  latencyMs: number;
+  generatedAt: string;
+  cached: boolean;
+}
+
 export interface ProblemDetail {
   type?: string;
   title?: string;
   status: number;
   detail?: string;
   instance?: string;
+  reason?: AiUnavailableReason;
 
   errors?: Record<string, string>;
 }
