@@ -7,6 +7,7 @@ import {
   AnomalyType,
   ClaimStatus,
   PolicyStatus,
+  AiUnavailableReason,
   ProblemDetail,
   UserRole,
 } from '../api/api.models';
@@ -131,7 +132,9 @@ export const Fmt = {
 
 export function apiErrorMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
+    const backendDetail = (error.error as Partial<ProblemDetail> | null)?.detail;
     if (error.status === 0 || error.status === 502 || error.status === 503 || error.status === 504) {
+      if (error.status !== 0 && typeof backendDetail === 'string' && backendDetail) return backendDetail;
       return `No se pudo conectar con el backend (${environment.apiUrl}). Verifica que la API esté en ejecución.`;
     }
     if (error.status === 401) return 'Sesión expirada o credenciales inválidas.';
@@ -147,4 +150,26 @@ export function apiErrorMessage(error: unknown): string {
     return `Error ${error.status} al comunicarse con el backend.`;
   }
   return 'Error inesperado.';
+}
+
+const AI_GUIDANCE: Record<AiUnavailableReason, string> = {
+  NOT_CONFIGURED: 'Configura GROK_API_KEY en el backend (Render → Environment) para activar el análisis con IA.',
+  UNAUTHORIZED: 'Revisa que la API key de xAI sea válida y tenga permiso para el modelo configurado.',
+  NO_CREDITS: 'Carga créditos o sube el límite de gasto en console.x.ai → Billing.',
+  RATE_LIMITED: 'Espera unos segundos y vuelve a intentarlo.',
+  TIMEOUT: 'Grok tardó demasiado en responder; vuelve a intentarlo.',
+  PROVIDER_ERROR: 'El servicio de xAI respondió con un error; vuelve a intentarlo más tarde.',
+};
+
+export interface AiErrorView {
+  message: string;
+  guidance?: string;
+  reason?: AiUnavailableReason;
+}
+
+export function aiErrorView(error: unknown): AiErrorView {
+  const reason =
+    error instanceof HttpErrorResponse ? (error.error as Partial<ProblemDetail> | null)?.reason : undefined;
+  const message = apiErrorMessage(error);
+  return reason && reason in AI_GUIDANCE ? { message, guidance: AI_GUIDANCE[reason], reason } : { message };
 }
