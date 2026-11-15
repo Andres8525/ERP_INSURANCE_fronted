@@ -2,9 +2,11 @@ import { Component, computed, inject, output, signal } from '@angular/core';
 import { AnomalyResponse, AnomalySeverity, BatchResolutionAction } from '@core/api/api.models';
 import { ErpStore } from '@core/state/erp.store';
 import { Fmt } from '@core/ui/format';
+import { AiInsightsPanelComponent } from './ai-insights-panel.component';
 
 @Component({
   selector: 'app-audit-page',
+  imports: [AiInsightsPanelComponent],
   templateUrl: './audit-page.component.html',
 })
 export class AuditPageComponent {

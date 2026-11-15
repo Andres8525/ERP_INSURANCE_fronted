@@ -1,7 +1,11 @@
-import { Component, inject, input, output, signal } from '@angular/core';
-import { AnomalyResponse, BatchResolutionAction } from '@core/api/api.models';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { AiInsightResponse, AnomalyResponse, BatchResolutionAction } from '@core/api/api.models';
+import { AuditApi } from '@core/api/audit.api';
 import { ErpStore } from '@core/state/erp.store';
-import { Fmt } from '@core/ui/format';
+import { AiErrorView, aiErrorView, Fmt } from '@core/ui/format';
+import { renderMarkdown } from '@core/ui/markdown';
+import { AI_MARKDOWN_CLASSES } from './ai-insights-panel.component';
 
 @Component({
   selector: 'app-anomaly-detail',
@@ -10,11 +14,33 @@ import { Fmt } from '@core/ui/format';
 })
 export class AnomalyDetailComponent {
   private readonly store = inject(ErpStore);
+  private readonly api = inject(AuditApi);
   readonly fmt = Fmt;
+  readonly markdownClasses = AI_MARKDOWN_CLASSES;
 
   readonly anomaly = input.required<AnomalyResponse>();
   readonly closed = output<void>();
   readonly busy = signal<BatchResolutionAction | null>(null);
+  readonly explanation = signal<AiInsightResponse | null>(null);
+  readonly explaining = signal(false);
+  readonly explanationError = signal<AiErrorView | null>(null);
+  readonly explanationHtml = computed(() => {
+    const explanation = this.explanation();
+    return explanation ? renderMarkdown(explanation.content) : '';
+  });
+
+  async explain(): Promise<void> {
+    if (this.explaining()) return;
+    this.explaining.set(true);
+    this.explanationError.set(null);
+    try {
+      this.explanation.set(await firstValueFrom(this.api.aiExplanation(this.anomaly().id)));
+    } catch (error) {
+      this.explanationError.set(aiErrorView(error));
+    } finally {
+      this.explaining.set(false);
+    }
+  }
 
   async resolve(action: BatchResolutionAction): Promise<void> {
     if (this.busy()) return;
