@@ -28,7 +28,7 @@
         <li class="flex items-center gap-2.5"><span class="size-1.5 rounded-full bg-teal-400"></span>Kanban de siniestros, CRM con CRMID y fichas en PDF</li>
       </ul>
     </div>
-    <p class="relative text-[11px] text-slate-500">MVP de demostración · datos ficticios · JWT y cifrado AES-256-GCM</p>
+    <p class="relative text-[11px] text-slate-500">© 2026 Nexo Health · Acceso protegido con JWT y cifrado AES-256-GCM</p>
   </section>
 
   <section class="flex items-center justify-center px-4 py-10">
@@ -60,45 +60,11 @@
         </div>
 
         <h2 class="mt-6 text-lg font-semibold text-slate-900">
-          {{ mode() === 'login' ? 'Bienvenido de nuevo' : 'Crea tu cuenta' }}
+          {{ mode() === 'login' ? 'Iniciar sesión' : 'Crear una cuenta' }}
         </h2>
         <p class="mt-1 text-xs text-slate-500">
-          {{ mode() === 'login' ? 'Accede con tu cuenta corporativa.' : 'Las cuentas nuevas tienen rol de agente.' }}
+          {{ mode() === 'login' ? 'Ingresa con tus credenciales corporativas para continuar.' : 'Las cuentas nuevas se crean con el rol de agente.' }}
         </p>
-
-        <div
-          class="mt-4 flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-[11px]"
-          [class.border-emerald-200]="server.state() === 'ready'"
-          [class.bg-emerald-50]="server.state() === 'ready'"
-          [class.text-emerald-800]="server.state() === 'ready'"
-          [class.border-amber-200]="server.state() === 'waking' || server.state() === 'checking'"
-          [class.bg-amber-50]="server.state() === 'waking' || server.state() === 'checking'"
-          [class.text-amber-800]="server.state() === 'waking' || server.state() === 'checking'"
-          [class.border-rose-200]="server.state() === 'offline'"
-          [class.bg-rose-50]="server.state() === 'offline'"
-          [class.text-rose-800]="server.state() === 'offline'"
-          role="status"
-          aria-live="polite"
-        >
-          <span class="flex items-center gap-2">
-            <span
-              class="size-2 shrink-0 rounded-full"
-              [class.bg-emerald-500]="server.state() === 'ready'"
-              [class.bg-amber-500]="server.state() === 'waking' || server.state() === 'checking'"
-              [class.animate-pulse]="server.state() === 'waking' || server.state() === 'checking'"
-              [class.bg-rose-500]="server.state() === 'offline'"
-            ></span>
-            @switch (server.state()) {
-              @case ('checking') { Conectando con el servidor… }
-              @case ('waking') { Despertando el servidor; puede tardar hasta un minuto… }
-              @case ('ready') { Servidor listo{{ server.latencyMs() !== null ? ' · ' + server.latencyMs() + ' ms' : '' }} }
-              @case ('offline') { No se pudo conectar con el servidor. }
-            }
-          </span>
-          @if (server.state() === 'offline') {
-            <button type="button" class="shrink-0 font-semibold underline underline-offset-2" (click)="server.warmUp()">Reintentar</button>
-          }
-        </div>
 
         <form class="mt-5 space-y-4" novalidate (ngSubmit)="submit()">
           <label class="block text-[11px] font-medium text-slate-600">
@@ -169,8 +135,9 @@
             <p class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-700" role="alert">{{ message }}</p>
           }
           @if (slow()) {
-            <p class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800" role="status">
-              El servidor se está iniciando (plan gratuito); la primera conexión puede tardar hasta un minuto.
+            <p class="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600" role="status">
+              <span class="size-3 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600" aria-hidden="true"></span>
+              Estamos preparando tu sesión, esto puede tardar unos segundos.
             </p>
           }
 
@@ -180,36 +147,41 @@
             [disabled]="submitting() || !canSubmit()"
           >
             @if (submitting()) {
-              {{ mode() === 'login' ? 'Validando…' : 'Creando cuenta…' }}
+              <span class="mr-2 size-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true"></span>
+              {{ mode() === 'login' ? 'Verificando credenciales…' : 'Creando cuenta…' }}
             } @else {
-              {{ mode() === 'login' ? 'Entrar' : 'Crear cuenta y entrar' }}
+              {{ mode() === 'login' ? 'Iniciar sesión' : 'Crear cuenta' }}
             }
           </button>
         </form>
       </div>
 
       @if (mode() === 'login') {
-        <div class="mt-4 rounded-xl border border-dashed border-slate-300 bg-white/70 p-4">
-          <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Cuentas demo</p>
-          <div class="mt-2.5 grid gap-1.5">
+        <details class="group mt-4 rounded-xl border border-slate-200 bg-white/80 text-slate-600">
+          <summary class="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-[11px] font-medium hover:text-slate-900">
+            Accesos de demostración
+            <svg viewBox="0 0 24 24" class="size-3.5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+          </summary>
+          <div class="grid gap-1.5 border-t border-slate-100 p-3">
             @for (account of demoAccounts; track account.email) {
               <button
                 type="button"
-                class="flex items-center justify-between rounded-md border px-3 py-2 text-left hover:border-teal-300"
+                class="flex items-center justify-between rounded-md border px-3 py-2 text-left transition-colors hover:border-teal-300 hover:bg-teal-50/40"
                 [class.border-teal-400]="email() === account.email"
                 [class.border-slate-200]="email() !== account.email"
                 (click)="useAccount(account)"
               >
                 <span>
-                  <span class="block text-[11px] font-medium text-slate-800">{{ account.email }}</span>
-                  <span class="block text-[10px] text-slate-500">{{ account.role }} · {{ account.hint }}</span>
+                  <span class="block text-[11px] font-medium text-slate-800">{{ account.role }}</span>
+                  <span class="block text-[10px] text-slate-500">{{ account.email }} · {{ account.hint }}</span>
                 </span>
-                <span class="text-[10px] font-semibold text-teal-700">Usar</span>
+                @if (email() === account.email) {
+                  <span class="text-[10px] font-semibold text-teal-700">Seleccionada</span>
+                }
               </button>
             }
           </div>
-          <p class="mt-2.5 text-[10px] text-slate-500">Contraseña: <code class="font-semibold text-slate-700">{{ demoPassword }}</code></p>
-        </div>
+        </details>
       }
     </div>
   </section>
