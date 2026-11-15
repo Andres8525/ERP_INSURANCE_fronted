@@ -1,0 +1,122 @@
+@let r = report();
+<div class="space-y-4" data-testid="ai-report">
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+    <p class="text-[12px] leading-relaxed text-slate-800" data-testid="ai-summary">{{ r.summary }}</p>
+    <span
+      class="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border px-2.5 py-1 text-[10px] font-semibold"
+      [class.border-rose-200]="risk().tone === 'critical'"
+      [class.bg-rose-50]="risk().tone === 'critical'"
+      [class.text-rose-800]="risk().tone === 'critical'"
+      [class.border-amber-200]="risk().tone === 'review'"
+      [class.bg-amber-50]="risk().tone === 'review'"
+      [class.text-amber-800]="risk().tone === 'review'"
+      [class.border-teal-200]="risk().tone === 'ok'"
+      [class.bg-teal-50]="risk().tone === 'ok'"
+      [class.text-teal-800]="risk().tone === 'ok'"
+      data-testid="ai-risk"
+    >
+      <i
+        class="size-1.5 rounded-full"
+        [class.bg-rose-500]="risk().tone === 'critical'"
+        [class.bg-amber-500]="risk().tone === 'review'"
+        [class.bg-teal-500]="risk().tone === 'ok'"
+      ></i>
+      {{ risk().label }}
+    </span>
+  </div>
+
+  @if (r.impact) {
+    <div class="rounded-md border-l-2 border-[#1e3a8a] bg-[#f4f7fc] px-3 py-2">
+      <p class="text-[9px] font-semibold uppercase tracking-wide text-[#1e3a8a]">Por qué importa</p>
+      <p class="mt-0.5 text-[11px] leading-relaxed text-slate-700">{{ r.impact }}</p>
+    </div>
+  }
+
+  @if (r.priorities.length) {
+    <section aria-label="Prioridades">
+      <h3 class="text-[11px] font-semibold text-slate-900">Prioridades</h3>
+      <ol class="mt-2 grid gap-2 lg:grid-cols-2">
+        @for (priority of r.priorities; track $index) {
+          <li class="flex gap-3 rounded-md border border-slate-200 bg-white p-3" data-testid="ai-priority">
+            <span
+              class="grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-semibold"
+              [class.bg-rose-100]="severityTone(priority) === 'critical'"
+              [class.text-rose-800]="severityTone(priority) === 'critical'"
+              [class.bg-amber-100]="severityTone(priority) !== 'critical'"
+              [class.text-amber-800]="severityTone(priority) !== 'critical'"
+              >{{ $index + 1 }}</span
+            >
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <p class="text-[11px] font-semibold text-slate-900">{{ priority.title }}</p>
+                @if (priority.severity) {
+                  <span
+                    class="rounded px-1.5 py-0.5 text-[9px] font-semibold"
+                    [class.badge-critical]="severityTone(priority) === 'critical'"
+                    [class.badge-review]="severityTone(priority) !== 'critical'"
+                    >{{ priority.severity }}</span
+                  >
+                }
+              </div>
+              @if (priority.recordType || priority.count) {
+                <p class="mt-0.5 text-[9px] text-slate-400">
+                  {{ priority.recordType }}{{ priority.recordType && priority.count ? ' · ' : '' }}{{ caseLabel(priority.count) }}
+                </p>
+              }
+              @if (priority.risk) {
+                <p class="mt-1.5 text-[10px] leading-relaxed text-slate-600">{{ priority.risk }}</p>
+              }
+              @if (priority.action) {
+                <p class="mt-1 flex gap-1.5 text-[10px] font-medium leading-relaxed text-teal-800">
+                  <span aria-hidden="true">→</span><span>{{ priority.action }}</span>
+                </p>
+              }
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+  }
+
+  <div class="grid gap-4" [class.report-split]="!compact() && r.prevention.length > 0 && r.actions.length > 0">
+    @if (r.actions.length) {
+      <section [attr.aria-label]="actionsTitle()">
+        <h3 class="text-[11px] font-semibold text-slate-900">{{ actionsTitle() }}</h3>
+        <ol class="mt-2 space-y-2">
+          @for (action of r.actions; track $index) {
+            <li class="flex gap-2.5" data-testid="ai-action">
+              <span class="mt-0.5 grid size-4 shrink-0 place-items-center rounded border border-teal-300 text-[8px] font-semibold text-teal-700">{{ $index + 1 }}</span>
+              <div class="min-w-0">
+                <p class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-medium text-slate-800">
+                  {{ action.title }}
+                  @if (action.owner) {
+                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-medium text-slate-600">{{ action.owner }}</span>
+                  }
+                </p>
+                @if (action.detail) {
+                  <p class="mt-0.5 text-[10px] leading-relaxed text-slate-500">{{ action.detail }}</p>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+    }
+
+    @if (r.prevention.length) {
+      <section class="rounded-md border border-slate-200 bg-slate-50/70 p-3" aria-label="Prevención">
+        <h3 class="text-[11px] font-semibold text-slate-900">Prevención</h3>
+        <ul class="mt-2 space-y-1.5">
+          @for (item of r.prevention; track $index) {
+            <li class="flex gap-2 text-[10px] leading-relaxed text-slate-600" data-testid="ai-prevention">
+              <svg viewBox="0 0 20 20" class="mt-0.5 size-3 shrink-0 text-teal-600" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M10 2.5 4 5v4.5c0 3.7 2.6 6.6 6 8 3.4-1.4 6-4.3 6-8V5l-6-2.5Z" /><path d="m7.5 10 1.8 1.8L13 8" />
+              </svg>
+              <span>{{ item }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+</div>
