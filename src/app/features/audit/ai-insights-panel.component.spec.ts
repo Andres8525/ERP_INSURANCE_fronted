@@ -88,7 +88,7 @@ describe('AiInsightsPanelComponent', () => {
     expect(component.error()?.reason).toBe('NO_CREDITS');
     const alert = (fixture.nativeElement as HTMLElement).querySelector('[role="alert"]');
     expect(alert?.textContent).toContain('La cuenta de xAI no tiene créditos');
-    expect(alert?.textContent).toContain('console.x.ai');
+    expect(alert?.textContent).toContain('consola del proveedor de IA');
   });
 
   it('desactiva el botón cuando el backend no tiene GROK_API_KEY', async () => {

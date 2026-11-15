@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { environment } from '@env/environment';
-import { aiErrorView, apiErrorMessage } from '../ui/format';
+import { aiErrorView, aiProviderLabel, apiErrorMessage, riskView } from '../ui/format';
 import { AuditApi } from './audit.api';
 
 const API = environment.apiUrl;
@@ -51,7 +51,7 @@ describe('errores del asistente IA', () => {
     expect(apiErrorMessage(noCredits)).toBe('La cuenta de xAI no tiene créditos');
     expect(aiErrorView(noCredits)).toEqual({
       message: 'La cuenta de xAI no tiene créditos',
-      guidance: 'Carga créditos o sube el límite de gasto en console.x.ai → Billing.',
+      guidance: 'Carga créditos o sube el límite de gasto en la consola del proveedor de IA.',
       reason: 'NO_CREDITS',
     });
   });
@@ -67,6 +67,21 @@ describe('errores del asistente IA', () => {
     const view = aiErrorView(
       new HttpErrorResponse({ status: 503, error: { status: 503, detail: 'Sin clave', reason: 'NOT_CONFIGURED' } }),
     );
-    expect(view.guidance).toContain('GROK_API_KEY');
+    expect(view.guidance).toContain('AI_API_KEY');
+  });
+});
+
+describe('etiquetas del asistente IA', () => {
+  it('muestra el nombre comercial del proveedor', () => {
+    expect(aiProviderLabel('groq')).toBe('Groq');
+    expect(aiProviderLabel('GROK')).toBe('Grok (xAI)');
+    expect(aiProviderLabel('otro')).toBe('otro');
+    expect(aiProviderLabel(undefined)).toBe('IA');
+  });
+
+  it('traduce el nivel de riesgo a etiqueta y tono visual', () => {
+    expect(riskView('ALTO')).toEqual({ label: 'Riesgo alto', tone: 'critical' });
+    expect(riskView('BAJO').tone).toBe('ok');
+    expect(riskView(undefined)).toEqual({ label: 'Riesgo medio', tone: 'review' });
   });
 });

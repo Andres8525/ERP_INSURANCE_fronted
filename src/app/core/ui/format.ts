@@ -7,6 +7,7 @@ import {
   AnomalyType,
   ClaimStatus,
   PolicyStatus,
+  AiRiskLevel,
   AiUnavailableReason,
   ProblemDetail,
   UserRole,
@@ -153,12 +154,12 @@ export function apiErrorMessage(error: unknown): string {
 }
 
 const AI_GUIDANCE: Record<AiUnavailableReason, string> = {
-  NOT_CONFIGURED: 'Configura GROK_API_KEY en el backend (Render → Environment) para activar el análisis con IA.',
-  UNAUTHORIZED: 'Revisa que la API key de xAI sea válida y tenga permiso para el modelo configurado.',
-  NO_CREDITS: 'Carga créditos o sube el límite de gasto en console.x.ai → Billing.',
+  NOT_CONFIGURED: 'Configura AI_API_KEY en el backend (Render → Environment) para activar el análisis con IA.',
+  UNAUTHORIZED: 'Revisa que la API key del proveedor de IA sea válida y tenga permiso para el modelo configurado.',
+  NO_CREDITS: 'Carga créditos o sube el límite de gasto en la consola del proveedor de IA.',
   RATE_LIMITED: 'Espera unos segundos y vuelve a intentarlo.',
-  TIMEOUT: 'Grok tardó demasiado en responder; vuelve a intentarlo.',
-  PROVIDER_ERROR: 'El servicio de xAI respondió con un error; vuelve a intentarlo más tarde.',
+  TIMEOUT: 'La IA tardó demasiado en responder; vuelve a intentarlo.',
+  PROVIDER_ERROR: 'El proveedor de IA respondió con un error; vuelve a intentarlo más tarde.',
 };
 
 export interface AiErrorView {
@@ -172,4 +173,31 @@ export function aiErrorView(error: unknown): AiErrorView {
     error instanceof HttpErrorResponse ? (error.error as Partial<ProblemDetail> | null)?.reason : undefined;
   const message = apiErrorMessage(error);
   return reason && reason in AI_GUIDANCE ? { message, guidance: AI_GUIDANCE[reason], reason } : { message };
+}
+
+const AI_PROVIDERS: Record<string, string> = {
+  groq: 'Groq',
+  grok: 'Grok (xAI)',
+  gemini: 'Gemini',
+  openrouter: 'OpenRouter',
+};
+
+export function aiProviderLabel(provider: string | null | undefined): string {
+  if (!provider) return 'IA';
+  return AI_PROVIDERS[provider.toLowerCase()] ?? provider;
+}
+
+export interface RiskView {
+  label: string;
+  tone: 'critical' | 'review' | 'ok';
+}
+
+const RISK: Record<AiRiskLevel, RiskView> = {
+  ALTO: { label: 'Riesgo alto', tone: 'critical' },
+  MEDIO: { label: 'Riesgo medio', tone: 'review' },
+  BAJO: { label: 'Riesgo bajo', tone: 'ok' },
+};
+
+export function riskView(level: AiRiskLevel | null | undefined): RiskView {
+  return RISK[level ?? 'MEDIO'] ?? RISK.MEDIO;
 }
