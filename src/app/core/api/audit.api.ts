@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import {
+  AiInsightResponse,
+  AiStatusResponse,
   AnomalyQuery,
   AnomalyResponse,
   AuditSummaryResponse,
@@ -31,6 +33,19 @@ export class AuditApi {
 
   scan(): Observable<ScanResponse> {
     return this.http.post<ScanResponse>(`${this.baseUrl}/scan`, {});
+  }
+
+  aiStatus(): Observable<AiStatusResponse> {
+    return this.http.get<AiStatusResponse>(`${this.baseUrl}/ai/status`);
+  }
+
+  aiInsights(refresh = false): Observable<AiInsightResponse> {
+    const params = refresh ? new HttpParams().set('refresh', 'true') : undefined;
+    return this.http.post<AiInsightResponse>(`${this.baseUrl}/ai/insights`, {}, { params });
+  }
+
+  aiExplanation(anomalyId: string): Observable<AiInsightResponse> {
+    return this.http.post<AiInsightResponse>(`${this.baseUrl}/anomalies/${encodeURIComponent(anomalyId)}/ai-explanation`, {});
   }
 
   resolveBatch(request: ResolveBatchRequest): Observable<ResolveBatchResponse> {
