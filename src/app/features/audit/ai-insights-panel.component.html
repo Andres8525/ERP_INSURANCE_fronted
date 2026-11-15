@@ -1,32 +1,35 @@
 <section class="mt-5 rounded-lg border border-[#c9d6ee] bg-white" aria-labelledby="ai-insights-title">
   <div class="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-    <div class="flex items-start gap-3">
+    <div class="flex min-w-0 items-start gap-3">
       <span class="grid size-9 shrink-0 place-items-center rounded-md bg-[#eaf0fb] text-[#1e3a8a]" aria-hidden="true">
         <svg viewBox="0 0 24 24" class="size-4.5" fill="none" stroke="currentColor" stroke-width="1.7">
           <path d="M12 3 14.5 9.5 21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z" />
         </svg>
       </span>
-      <div>
-        <h2 id="ai-insights-title" class="text-sm font-semibold text-slate-900">Recomendaciones con IA</h2>
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 id="ai-insights-title" class="text-sm font-semibold text-slate-900">Recomendaciones con IA</h2>
+          @if (status(); as s) {
+            <span
+              class="rounded-full border px-2 py-0.5 text-[9px] font-medium"
+              [class.border-teal-200]="s.enabled"
+              [class.bg-teal-50]="s.enabled"
+              [class.text-teal-800]="s.enabled"
+              [class.border-slate-200]="!s.enabled"
+              [class.text-slate-500]="!s.enabled"
+              [attr.title]="s.model"
+              data-testid="ai-status"
+            >
+              {{ s.enabled ? providerName() + ' · conectado' : 'Sin configurar' }}
+            </span>
+          }
+        </div>
         <p class="mt-1 text-[10px] text-slate-500">
-          Grok analiza un resumen anonimizado de las anomalías abiertas: sin nombres, correos, teléfonos ni CRMID.
+          La IA analiza un resumen anonimizado de las anomalías abiertas: sin nombres, correos, teléfonos ni CRMID.
         </p>
       </div>
     </div>
-    <div class="flex flex-wrap items-center gap-2">
-      @if (status(); as s) {
-        <span
-          class="rounded-full border px-2.5 py-1 text-[10px] font-medium"
-          [class.border-teal-200]="s.enabled"
-          [class.bg-teal-50]="s.enabled"
-          [class.text-teal-800]="s.enabled"
-          [class.border-slate-200]="!s.enabled"
-          [class.text-slate-500]="!s.enabled"
-          data-testid="ai-status"
-        >
-          {{ s.enabled ? 'Conectado' : 'Sin configurar' }} · {{ s.model }}
-        </span>
-      }
+    <div class="flex shrink-0 flex-wrap items-center gap-2">
       @if (insight()) {
         <button
           class="h-8 rounded-md border border-slate-200 bg-white px-3 text-[11px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
@@ -39,12 +42,12 @@
       <button
         class="inline-flex h-8 items-center gap-2 rounded-md bg-[#1e3a8a] px-3 text-[11px] font-semibold text-white hover:bg-[#172f70] disabled:opacity-60"
         [disabled]="loading() || status()?.enabled === false"
-        [attr.title]="status()?.enabled === false ? 'Configura GROK_API_KEY en el backend' : null"
+        [attr.title]="status()?.enabled === false ? 'Configura AI_API_KEY en el backend' : null"
         (click)="generate()"
       >
         @if (loading()) {
           <span class="size-3 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true"></span>
-          Analizando con Grok…
+          Analizando…
         } @else {
           Generar recomendaciones
         }
@@ -61,9 +64,13 @@
         }
       </div>
     } @else if (insight(); as i) {
-      <div [class]="markdownClasses" [innerHTML]="html()" data-testid="ai-content"></div>
+      @if (i.report; as report) {
+        <app-ai-report [report]="report" />
+      } @else {
+        <div [class]="markdownClasses" [innerHTML]="html()" data-testid="ai-content"></div>
+      }
       <p class="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 pt-3 text-[9px] text-slate-400">
-        <span>{{ i.provider }} · {{ i.model }}</span>
+        <span>{{ providerName() }} · {{ i.model }}</span>
         <span>{{ i.analyzedAnomalies }} anomalía(s) analizadas</span>
         <span>{{ i.promptTokens + i.completionTokens }} tokens</span>
         <span>{{ i.latencyMs }} ms</span>
@@ -73,8 +80,8 @@
       </p>
     } @else if (status()?.enabled === false) {
       <p class="text-[11px] text-slate-500">
-        El asistente no está configurado. Agrega <code class="rounded bg-slate-100 px-1 text-[10px]">GROK_API_KEY</code> en las variables
-        de entorno del backend para activarlo.
+        El asistente no está configurado. Agrega <code class="rounded bg-slate-100 px-1 text-[10px]">AI_API_KEY</code> en las variables de
+        entorno del backend para activarlo.
       </p>
     } @else {
       <p class="text-[11px] text-slate-500">

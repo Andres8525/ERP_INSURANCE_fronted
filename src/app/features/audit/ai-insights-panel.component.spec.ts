@@ -5,14 +5,16 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AiInsightResponse } from '@core/api/api.models';
 import { environment } from '@env/environment';
 import { AiInsightsPanelComponent } from './ai-insights-panel.component';
+import { REPORT } from './ai-report.testing';
 
 const API = environment.apiUrl;
 const tick = () => new Promise((resolve) => setTimeout(resolve));
 
 const INSIGHT: AiInsightResponse = {
-  content: '## Diagnóstico\nHay **4** anomalías críticas.\n\n## Acciones recomendadas\n- Revisar pólizas solapadas',
-  provider: 'grok',
-  model: 'grok-4.7',
+  content: '## Resumen\nHay **4** anomalías críticas.',
+  report: REPORT,
+  provider: 'groq',
+  model: 'openai/gpt-oss-120b',
   analyzedAnomalies: 8,
   promptTokens: 300,
   completionTokens: 120,
@@ -31,6 +33,13 @@ describe('AiInsightsPanelComponent', () => {
     await fixture.whenStable();
   }
 
+  async function connect(enabled = true): Promise<HTMLElement> {
+    http.expectOne(`${API}/audit/ai/status`).flush({ enabled, provider: 'groq', model: 'openai/gpt-oss-120b' });
+    await tick();
+    await render();
+    return fixture.nativeElement;
+  }
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AiInsightsPanelComponent],
@@ -43,12 +52,10 @@ describe('AiInsightsPanelComponent', () => {
 
   afterEach(() => http.verify());
 
-  it('muestra el estado del asistente y renderiza las recomendaciones de Grok', async () => {
-    http.expectOne(`${API}/audit/ai/status`).flush({ enabled: true, provider: 'grok', model: 'grok-4.7' });
-    await tick();
-    await render();
-    const element: HTMLElement = fixture.nativeElement;
-    expect(element.querySelector('[data-testid="ai-status"]')?.textContent).toContain('Conectado · grok-4.7');
+  it('muestra el proveedor real y el reporte estructurado', async () => {
+    const element = await connect();
+    expect(element.querySelector('[data-testid="ai-status"]')?.textContent?.trim()).toBe('Groq · conectado');
+    expect(element.textContent).not.toContain('Grok');
 
     const done = component.generate();
     expect(component.loading()).toBe(true);
@@ -56,29 +63,40 @@ describe('AiInsightsPanelComponent', () => {
     await done;
     await render();
 
-    const content = element.querySelector('[data-testid="ai-content"]');
-    expect(content?.querySelector('h4')?.textContent).toBe('Diagnóstico');
-    expect(content?.querySelector('strong')?.textContent).toBe('4');
-    expect(content?.querySelectorAll('li')).toHaveLength(1);
+    expect(element.querySelector('app-ai-report')).not.toBeNull();
+    expect(element.querySelector('[data-testid="ai-content"]')).toBeNull();
+    expect(element.querySelectorAll('[data-testid="ai-priority"]')).toHaveLength(2);
+    expect(element.textContent).toContain('Groq · openai/gpt-oss-120b');
     expect(element.textContent).toContain('420 tokens');
 
     const again = component.generate(true);
-    http.expectOne((r) => r.url === `${API}/audit/ai/insights` && r.params.get('refresh') === 'true').flush({
-      ...INSIGHT,
-      cached: false,
-      content: 'Nuevo',
-    });
+    http.expectOne((r) => r.url === `${API}/audit/ai/insights` && r.params.get('refresh') === 'true').flush({ ...INSIGHT, cached: true });
     await again;
-    expect(component.insight()?.content).toBe('Nuevo');
+    await render();
+    expect(element.textContent).toContain('Respuesta en caché');
   });
 
-  it('explica cómo resolver la falta de créditos de xAI', async () => {
-    http.expectOne(`${API}/audit/ai/status`).flush({ enabled: true, provider: 'grok', model: 'grok-4.7' });
-    await tick();
+  it('usa el Markdown como respaldo cuando el backend no trae reporte', async () => {
+    const element = await connect();
+    const done = component.generate();
+    http.expectOne((r) => r.url === `${API}/audit/ai/insights`).flush({
+      ...INSIGHT,
+      report: undefined,
+      content: '## Diagnóstico\n| Severidad | Casos |\n|---|---|\n| Crítica | 4 |',
+    });
+    await done;
+    await render();
 
+    const content = element.querySelector('[data-testid="ai-content"]');
+    expect(content?.querySelector('h4')?.textContent).toBe('Diagnóstico');
+    expect(content?.querySelector('table td')?.textContent).toBe('Crítica');
+  });
+
+  it('explica cómo resolver la falta de créditos', async () => {
+    await connect();
     const done = component.generate();
     http.expectOne((r) => r.url === `${API}/audit/ai/insights`).flush(
-      { status: 502, detail: 'La cuenta de xAI no tiene créditos', reason: 'NO_CREDITS' },
+      { status: 502, detail: 'La cuenta de Groq no tiene créditos', reason: 'NO_CREDITS' },
       { status: 502, statusText: 'Bad Gateway' },
     );
     await done;
@@ -87,17 +105,14 @@ describe('AiInsightsPanelComponent', () => {
     expect(component.loading()).toBe(false);
     expect(component.error()?.reason).toBe('NO_CREDITS');
     const alert = (fixture.nativeElement as HTMLElement).querySelector('[role="alert"]');
-    expect(alert?.textContent).toContain('La cuenta de xAI no tiene créditos');
+    expect(alert?.textContent).toContain('La cuenta de Groq no tiene créditos');
     expect(alert?.textContent).toContain('consola del proveedor de IA');
   });
 
-  it('desactiva el botón cuando el backend no tiene GROK_API_KEY', async () => {
-    http.expectOne(`${API}/audit/ai/status`).flush({ enabled: false, provider: 'grok', model: 'grok-4.7' });
-    await tick();
-    await render();
-    const element: HTMLElement = fixture.nativeElement;
+  it('desactiva el botón cuando el backend no tiene AI_API_KEY', async () => {
+    const element = await connect(false);
     const button = [...element.querySelectorAll('button')].find((b) => b.textContent?.includes('Generar recomendaciones'));
     expect(button?.disabled).toBe(true);
-    expect(element.textContent).toContain('GROK_API_KEY');
+    expect(element.textContent).toContain('AI_API_KEY');
   });
 });
