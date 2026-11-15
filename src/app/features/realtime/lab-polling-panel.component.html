@@ -1,0 +1,56 @@
+<section class="rounded-lg border border-slate-200 bg-white" aria-labelledby="polling-title">
+  <header class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+    <div>
+      <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Short polling · cada 3 s</p>
+      <h2 id="polling-title" class="mt-1 text-sm font-semibold text-slate-900">Laboratorio y RIPS</h2>
+      <p class="mt-1 text-[10px] text-slate-500">Procesos pesados donde la inmediatez no es crítica: el cliente pregunta y el servidor responde 304 si nada cambió.</p>
+    </div>
+    <span class="status-pill" [attr.data-status]="polling.running() ? 'busy' : polling.status()?.state === 'COMPLETED' ? 'ready' : 'idle'">
+      {{ polling.running() ? 'Consultando' : polling.status()?.state === 'COMPLETED' ? 'Completado' : 'En espera' }}
+    </span>
+  </header>
+
+  <div class="space-y-4 p-5">
+    <div class="flex flex-wrap gap-2">
+      <button class="btn-primary" [disabled]="polling.running()" (click)="start('LAB_RESULTS')">Procesar resultados de laboratorio</button>
+      <button class="btn-secondary" [disabled]="polling.running()" (click)="start('RIPS')">Generar RIPS</button>
+      @if (polling.running()) {
+        <button class="btn-secondary" (click)="polling.stop()">Detener</button>
+      }
+    </div>
+
+    @if (polling.error(); as error) {
+      <p class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-800" role="alert">{{ error }}</p>
+    }
+
+    @if (polling.status(); as status) {
+      <div data-testid="polling-status">
+        <div class="flex items-center justify-between text-[11px]">
+          <span class="font-medium text-slate-700">{{ label(status.kind) }} · {{ status.stage }}</span>
+          <span class="tabular-nums text-slate-500">{{ status.progress }}% · ETA {{ status.etaSeconds }} s</span>
+        </div>
+        <div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+          <div class="h-full rounded-full bg-teal-600 transition-[width] duration-700" [style.width.%]="status.progress"></div>
+        </div>
+      </div>
+
+      @if (status.result; as result) {
+        <div class="rounded-md border border-teal-200 bg-teal-50/60 p-3">
+          <p class="text-[11px] font-semibold text-teal-900">{{ result.summary }}</p>
+          <ul class="mt-1.5 grid gap-1 sm:grid-cols-2">
+            @for (item of result.items; track item) {
+              <li class="text-[10px] text-teal-800">{{ item }}</li>
+            }
+          </ul>
+        </div>
+      }
+    }
+
+    <dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div><dt class="metric-label">Peticiones</dt><dd class="metric-value" data-testid="polling-requests">{{ polling.stats().requests }}</dd></div>
+      <div><dt class="metric-label">304 sin cambios</dt><dd class="metric-value">{{ polling.stats().notModified }} <span class="text-[10px] font-normal text-slate-400">({{ wasted() }}%)</span></dd></div>
+      <div><dt class="metric-label">Bytes útiles</dt><dd class="metric-value">{{ polling.stats().bytes }}</dd></div>
+      <div><dt class="metric-label">Latencia</dt><dd class="metric-value">{{ polling.stats().lastLatencyMs }} ms</dd></div>
+    </dl>
+  </div>
+</section>

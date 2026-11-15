@@ -1,0 +1,86 @@
+<section class="rounded-lg border border-slate-200 bg-white" aria-labelledby="sse-title">
+  <header class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+    <div>
+      <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">SSE · text/event-stream</p>
+      <h2 id="sse-title" class="mt-1 text-sm font-semibold text-slate-900">Signos vitales UCI y farmacia</h2>
+      <p class="mt-1 text-[10px] text-slate-500">Flujo unidireccional del servidor al panel de enfermería, con reconexión automática y Last-Event-ID.</p>
+    </div>
+    <span class="status-pill" [attr.data-status]="stream.status() === 'open' ? 'ready' : stream.status() === 'error' ? 'error' : stream.status() === 'idle' ? 'idle' : 'busy'">
+      {{ statusLabel() }}
+    </span>
+  </header>
+
+  <div class="space-y-4 p-5">
+    <div class="flex flex-wrap items-center gap-2">
+      @for (bed of beds; track bed) {
+        <button class="filter-chip rounded border px-2.5 py-1.5 text-[10px] font-medium" [class.filter-chip-active]="selected().has(bed)" (click)="toggle(bed)">{{ bed }}</button>
+      }
+      <span class="mx-1 h-5 w-px bg-slate-200"></span>
+      @if (stream.status() === 'idle' || stream.status() === 'error') {
+        <button class="btn-primary" [disabled]="selected().size === 0" (click)="connect()">Abrir stream</button>
+      } @else {
+        <button class="btn-secondary" (click)="stream.disconnect()">Cerrar stream</button>
+      }
+    </div>
+
+    @if (stream.error(); as error) {
+      <p class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-800" role="alert">{{ error }}</p>
+    }
+
+    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      @for (card of cards(); track card.bedId) {
+        <article class="rounded-md border p-3 transition-colors" [class]="alarmClass(card.state?.latest.alarm)" data-testid="bed-card">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-semibold text-slate-800">{{ card.bedId }}</p>
+            @if (card.state?.latest.alarm === 'CRITICAL') {
+              <span class="rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white motion-safe:animate-pulse">CRÍTICO</span>
+            } @else if (card.state?.latest.alarm === 'WARNING') {
+              <span class="rounded bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">ALERTA</span>
+            }
+          </div>
+          @if (card.state; as state) {
+            <p class="mt-0.5 truncate text-[9px] text-slate-500" [attr.title]="state.latest.patientLabel">{{ state.latest.patientLabel }}</p>
+            <div class="mt-2 grid grid-cols-3 gap-x-2 gap-y-1 text-[10px] tabular-nums">
+              <span class="text-slate-500">FC <strong class="text-slate-900">{{ state.latest.heartRate }}</strong></span>
+              <span class="text-slate-500">SpO₂ <strong class="text-slate-900">{{ state.latest.spo2 }}%</strong></span>
+              <span class="text-slate-500">FR <strong class="text-slate-900">{{ state.latest.respRate }}</strong></span>
+              <span class="col-span-2 text-slate-500">PA <strong class="text-slate-900">{{ state.latest.systolic }}/{{ state.latest.diastolic }}</strong></span>
+              <span class="text-slate-500">T <strong class="text-slate-900">{{ state.latest.temperature }}</strong></span>
+            </div>
+            <svg viewBox="0 0 120 32" class="mt-2 h-8 w-full" preserveAspectRatio="none" aria-hidden="true">
+              <polyline [attr.points]="points(state.heartRate)" fill="none" stroke="#e11d48" stroke-width="1.4" stroke-linejoin="round" />
+              <polyline [attr.points]="points(state.spo2)" fill="none" stroke="#0f766e" stroke-width="1.2" stroke-linejoin="round" opacity=".7" />
+            </svg>
+            @if (state.latest.alarmReasons.length) {
+              <p class="mt-1 text-[9px] font-medium text-rose-700">{{ state.latest.alarmReasons.join(' · ') }}</p>
+            }
+          } @else {
+            <p class="mt-3 text-[10px] text-slate-400">Sin datos todavía</p>
+          }
+        </article>
+      }
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-[1fr_auto]">
+      <div>
+        <p class="text-[11px] font-semibold text-slate-800">Avisos de farmacia</p>
+        <ul class="mt-2 space-y-1.5">
+          @for (notice of stream.pharmacy(); track notice.noticeId) {
+            <li class="toast-in flex items-center justify-between gap-2 rounded border border-slate-100 px-2.5 py-1.5 text-[10px]">
+              <span class="text-slate-700"><strong>{{ notice.bedId }}</strong> · {{ notice.medication }}</span>
+              <span class="font-semibold" [class.text-teal-700]="notice.status === 'DISPENSADO'" [class.text-amber-700]="notice.status === 'EN_CAMINO'" [class.text-rose-700]="notice.status === 'SIN_STOCK'">{{ notice.status.replace('_', ' ') }}</span>
+            </li>
+          } @empty {
+            <li class="text-[10px] text-slate-400">Los avisos llegan por el mismo stream cada ~15 s.</li>
+          }
+        </ul>
+      </div>
+      <dl class="grid grid-cols-2 gap-3 lg:w-56">
+        <div><dt class="metric-label">Eventos</dt><dd class="metric-value" data-testid="sse-received">{{ stream.received() }}</dd></div>
+        <div><dt class="metric-label">Eventos/s</dt><dd class="metric-value">{{ stream.eventsPerSecond() }}</dd></div>
+        <div><dt class="metric-label">Last-Event-ID</dt><dd class="metric-value">{{ stream.lastEventId() ?? '—' }}</dd></div>
+        <div><dt class="metric-label">Reconexiones</dt><dd class="metric-value">{{ stream.reconnects() }}</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
