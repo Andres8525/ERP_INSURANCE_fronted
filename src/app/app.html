@@ -72,10 +72,6 @@
                       <circle cx="12" cy="8" r="3.5" />
                       <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
                     }
-                    @case ('cpu') {
-                      <rect x="7" y="7" width="10" height="10" rx="1.5" />
-                      <path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4" />
-                    }
                     @case ('cloud') {
                       <path d="M7 18h10a4 4 0 0 0 .7-7.9A5.8 5.8 0 0 0 6.5 9a4.5 4.5 0 0 0 .5 9Z" />
                       <path d="M12 12v7m-2.5-2.5L12 19l2.5-2.5" />
@@ -232,13 +228,6 @@
           @case ('cloud') {
             @defer (on immediate) {
               <app-cloud-archive />
-            } @placeholder {
-              <div class="h-72 animate-pulse rounded-lg border border-slate-200 bg-white" aria-busy="true"></div>
-            }
-          }
-          @case ('workers') {
-            @defer (on immediate) {
-              <app-workers-monitor-page />
             } @placeholder {
               <div class="h-72 animate-pulse rounded-lg border border-slate-200 bg-white" aria-busy="true"></div>
             }

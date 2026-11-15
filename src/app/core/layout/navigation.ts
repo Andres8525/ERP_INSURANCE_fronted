@@ -1,9 +1,9 @@
-export type ViewKey = 'overview' | 'audit' | 'claims' | 'enrollment' | 'clients' | 'patient' | 'cloud' | 'workers';
+export type ViewKey = 'overview' | 'audit' | 'claims' | 'enrollment' | 'clients' | 'patient' | 'cloud';
 
 export interface NavigationItem {
   key: ViewKey;
   label: string;
-  icon: 'grid' | 'scan' | 'file' | 'users' | 'card' | 'user' | 'cloud' | 'cpu';
+  icon: 'grid' | 'scan' | 'file' | 'users' | 'card' | 'user' | 'cloud';
   section: 'OPERACIONES' | 'GESTIÓN' | 'SISTEMA';
   requiresAudit?: boolean;
 }
@@ -16,5 +16,4 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   { key: 'clients', label: 'Clientes CRM', icon: 'card', section: 'GESTIÓN' },
   { key: 'patient', label: 'Pacientes', icon: 'user', section: 'GESTIÓN' },
   { key: 'cloud', label: 'Optimización nube', icon: 'cloud', section: 'SISTEMA', requiresAudit: true },
-  { key: 'workers', label: 'Monitor de workers', icon: 'cpu', section: 'SISTEMA' },
 ];

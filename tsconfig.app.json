@@ -10,8 +10,6 @@
   ],
   "exclude": [
     "src/**/*.spec.ts",
-    "src/**/*.worker.ts",
-    "src/**/*.shared-worker.ts",
     "src/**/*.sw.ts"
   ]
 }
