@@ -27,7 +27,7 @@ También se puede **crear una cuenta** desde la pestaña *Crear cuenta* (correo 
 | --- | --- |
 | Login / registro | `POST /api/auth/login`, `POST /api/auth/register`, `GET /api/auth/me` (valida la sesión al recargar) |
 | Resumen | Métricas calculadas con pacientes, siniestros y anomalías |
-| Auditoría IA | `GET /api/audit/anomalies`, `GET /api/audit/summary`, `POST /api/audit/scan` (motor gRPC), `POST /api/audit/resolve-batch` |
+| Auditoría IA | `GET /api/audit/anomalies`, `GET /api/audit/summary`, `POST /api/audit/scan` (motor gRPC), `POST /api/audit/resolve-batch`, `GET /api/audit/ai/status`, `POST /api/audit/ai/insights`, `POST /api/audit/anomalies/{id}/ai-explanation` |
 | Siniestros (Kanban) | `GET /api/claims/pipeline`, `POST/PUT/DELETE /api/claims`, `PATCH /api/claims/{id}/status` |
 | Afiliaciones (stepper) | `POST /api/patients`, `POST /api/patients/{id}/policies`, `POST /api/claims` |
 | Clientes CRM | `GET /api/clients`, `GET /api/clients/{id}/pdf` |
@@ -111,6 +111,16 @@ Medido en Chrome con COOP/COEP: 100.000 registros analizados en el worker en ~17
 ## Auditoría IA con gRPC
 
 *Ejecutar análisis* llama a `POST /api/audit/scan`. El backend envía pacientes y pólizas por gRPC al microservicio `anomaly-engine` (o al mismo motor en proceso si el microservicio no está disponible), guarda los hallazgos nuevos y la bandeja se recarga. La franja *Último análisis* muestra registros revisados, hallazgos nuevos y conocidos, el motor usado, el número de reglas y la duración.
+
+### Recomendaciones con IA (Groq, Grok, Gemini u OpenRouter)
+
+El panel *Recomendaciones con IA* (`ai-insights-panel.component`) pide a `POST /api/audit/ai/insights` un diagnóstico de las anomalías abiertas. El proveedor lo decide el backend según `AI_API_KEY`; la interfaz muestra su nombre real (`aiProviderLabel`) y el modelo.
+
+- **Reporte estructurado** (`ai-report.component`): resumen, nivel de riesgo (alto, medio o bajo), *Por qué importa*, prioridades numeradas con severidad, tipo de registro y número de casos, acciones con el equipo responsable y controles de prevención. El texto llega limpio del backend (sin HTML, tablas ni códigos internos).
+- **Respaldo en Markdown**: si el modelo no devolvió JSON válido, se muestra `content` con `renderMarkdown`, que escapa HTML y admite títulos, listas, tablas, `---` y `<br>` literales.
+- **Acciones**: *Generar recomendaciones*, *Regenerar* (`refresh=true`, ignora la caché del backend) y *Copiar* (Markdown al portapapeles). Mientras responde se muestra un esqueleto de carga; el pie indica cuándo se generó, tokens, latencia y si vino de caché.
+- **Explicar con IA** en *Comparar registros* usa el mismo reporte en modo compacto (*Cómo corregirlo* con pasos numerados).
+- **Errores**: el backend devuelve `ProblemDetail` con `reason` (`NOT_CONFIGURED`, `NO_CREDITS`, `RATE_LIMITED`…); `aiErrorView` muestra el detalle real y una guía para resolverlo.
 
 `api.models.ts` debe coincidir con los records del backend. El backend omite los campos `null` (`non_null`), por eso esos campos son opcionales (`?`) en TypeScript.
 
