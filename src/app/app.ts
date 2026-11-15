@@ -15,13 +15,11 @@ import { EnrollmentPageComponent } from './features/enrollment/enrollment-page.c
 import { OverviewPageComponent } from './features/overview/overview-page.component';
 import { PatientProfileComponent } from './features/patient/patient-profile.component';
 import { NAVIGATION_ITEMS, ViewKey } from './core/layout/navigation';
-import { RealtimePageComponent } from './features/realtime/realtime-page.component';
 
 const VIEW_TITLES: Record<ViewKey, string> = {
   overview: 'Resumen',
   audit: 'Auditoría IA',
   claims: 'Siniestros',
-  realtime: 'Tiempo real',
   enrollment: 'Afiliaciones',
   clients: 'Clientes CRM',
   patient: 'Pacientes',
@@ -42,7 +40,6 @@ const VIEW_TITLES: Record<ViewKey, string> = {
     WorkersMonitorPageComponent,
     PatientProfileComponent,
     CloudArchiveComponent,
-    RealtimePageComponent,
   ],
   templateUrl: './app.html',
 })

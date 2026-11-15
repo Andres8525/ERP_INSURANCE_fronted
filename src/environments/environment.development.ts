@@ -3,6 +3,4 @@ export const environment = {
   apiUrl: '/api',
 
   healthUrl: '/actuator/health',
-
-  realtimeUrl: '',
 };
