@@ -322,3 +322,60 @@ export interface ProblemDetail {
 
   errors?: Record<string, string>;
 }
+
+export type RetentionDecision = 'KEEP' | 'ARCHIVE' | 'DELETE' | 'LEGAL_HOLD';
+export type RetentionCategory = 'POLICY' | 'CLAIM' | 'PATIENT_FILE';
+
+export interface RetentionCandidate {
+  recordId: Uuid;
+  category: RetentionCategory;
+  reference: string;
+  crmId?: string;
+  lastActivity: string;
+  inactiveMonths: number;
+  sizeMb: number;
+  decision: RetentionDecision;
+  reason: string;
+}
+
+export interface RetentionCategoryBreakdown {
+  category: RetentionCategory;
+  label: string;
+  records: number;
+  sizeMb: number;
+  keep: number;
+  archive: number;
+  delete: number;
+  legalHold: number;
+}
+
+export interface RetentionSummary {
+  profiled: number;
+  keep: number;
+  archive: number;
+  delete: number;
+  legalHold: number;
+  storageGb: number;
+  archiveGb: number;
+  deleteGb: number;
+  monthlyCostUsd: number;
+  optimizedMonthlyCostUsd: number;
+  monthlySavingsUsd: number;
+  savingsPercent: number;
+  annualSavingsPer10kRecordsUsd: number;
+}
+
+export interface RetentionRules {
+  archiveAfterMonths: number;
+  retentionYears: number;
+  hotUsdPerGbMonth: number;
+  archiveUsdPerGbMonth: number;
+}
+
+export interface RetentionProfile {
+  summary: RetentionSummary;
+  rules: RetentionRules;
+  categories: RetentionCategoryBreakdown[];
+  candidates: RetentionCandidate[];
+  generatedAt: string;
+}

@@ -36,6 +36,17 @@ describe('AuditApi: asistente IA', () => {
     fresh.flush({});
   });
 
+  it('consulta el perfil de retención y el plan de IA', () => {
+    api.retention().subscribe();
+    http.expectOne({ method: 'GET', url: `${API}/audit/retention` }).flush({});
+
+    api.retentionPlan(true).subscribe();
+    const plan = http.expectOne((r) => r.url === `${API}/audit/retention/ai-plan`);
+    expect(plan.request.method).toBe('POST');
+    expect(plan.request.params.get('refresh')).toBe('true');
+    plan.flush({});
+  });
+
   it('pide la explicación de una anomalía concreta', () => {
     api.aiExplanation('a-1').subscribe();
     http.expectOne({ method: 'POST', url: `${API}/audit/anomalies/a-1/ai-explanation` }).flush({});

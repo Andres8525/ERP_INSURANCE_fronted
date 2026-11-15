@@ -11,6 +11,7 @@ import {
   PageResponse,
   ResolveBatchRequest,
   ResolveBatchResponse,
+  RetentionProfile,
   ScanResponse,
 } from './api.models';
 
@@ -46,6 +47,15 @@ export class AuditApi {
 
   aiExplanation(anomalyId: string): Observable<AiInsightResponse> {
     return this.http.post<AiInsightResponse>(`${this.baseUrl}/anomalies/${encodeURIComponent(anomalyId)}/ai-explanation`, {});
+  }
+
+  retention(): Observable<RetentionProfile> {
+    return this.http.get<RetentionProfile>(`${this.baseUrl}/retention`);
+  }
+
+  retentionPlan(refresh = false): Observable<AiInsightResponse> {
+    const params = refresh ? new HttpParams().set('refresh', 'true') : undefined;
+    return this.http.post<AiInsightResponse>(`${this.baseUrl}/retention/ai-plan`, {}, { params });
   }
 
   resolveBatch(request: ResolveBatchRequest): Observable<ResolveBatchResponse> {
