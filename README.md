@@ -21,6 +21,20 @@ Cuentas demo (contraseña `NexoDemo2026!`): `admin@nexo.demo` (administrador), `
 
 También se puede **crear una cuenta** desde la pestaña *Crear cuenta* (correo válido y contraseña de 12 caracteres o más). Las cuentas nuevas tienen rol agente y quedan con la sesión iniciada.
 
+## Cobertura del caso de estudio
+
+*ERP integral para aseguradoras médicas y gestión de pacientes (ACA/Obamacare)*
+
+| Requisito | Dónde se cumple |
+| --- | --- |
+| Gestionar afiliaciones | *Afiliaciones*: stepper con validación de paciente, plan, prima ($0 con subsidio ACA) y servicios |
+| Emitir pólizas | Alta de póliza en la afiliación y CRUD en *Pacientes*; ficha PDF en *Clientes CRM* (CRMID) |
+| Seguimiento de siniestros | *Siniestros*: Kanban con historial de estados, prioridades y cola offline idempotente |
+| Servicios logísticos del paciente | Servicios asociados al siniestro y a la afiliación (transporte médico, entrega de equipo, coordinación de cuidados) |
+| IA: errores de registro en masa | *Auditoría IA*: motor de reglas gRPC (pólizas solapadas, facturación, duplicados, correos y teléfonos) con resolución masiva, y recomendaciones del LLM con datos anonimizados |
+| IA: expedientes obsoletos a borrar o archivar | *Optimización nube*: perfil real de pólizas, siniestros y expedientes (mantener, archivar, eliminar, retención legal) y plan priorizado del LLM |
+| Retención de datos y costos de nube | Política configurable (archivar a los 12 meses, eliminar a los 7 años, retención legal por siniestros en trámite o anomalías críticas) y ahorro estimado de almacenamiento |
+
 ## Vistas
 
 | Vista | Endpoints |
@@ -32,7 +46,7 @@ También se puede **crear una cuenta** desde la pestaña *Crear cuenta* (correo 
 | Afiliaciones (stepper) | `POST /api/patients`, `POST /api/patients/{id}/policies`, `POST /api/claims` |
 | Clientes CRM | `GET /api/clients`, `GET /api/clients/{id}/pdf` |
 | Pacientes | `GET/PUT/DELETE /api/patients`, `GET/PUT/DELETE /api/patients/{id}/policies` |
-| Optimización nube | Datos ilustrativos (sin backend en el MVP) |
+| Optimización nube (ADMIN/AUDITOR) | `GET /api/audit/retention`, `POST /api/audit/retention/ai-plan` |
 
 ## Estructura
 
@@ -123,6 +137,17 @@ El panel *Recomendaciones con IA* (`ai-insights-panel.component`) pide a `POST /
 - **Errores**: el backend devuelve `ProblemDetail` con `reason` (`NOT_CONFIGURED`, `NO_CREDITS`, `RATE_LIMITED`…); `aiErrorView` muestra el detalle real y una guía para resolverlo.
 
 `api.models.ts` debe coincidir con los records del backend. El backend omite los campos `null` (`non_null`), por eso esos campos son opcionales (`?`) en TypeScript.
+
+## Optimización de nube
+
+`cloud-archive.component` consume `GET /api/audit/retention`: indicadores (registros perfilados, para archivar, para eliminar, ahorro estimado), barra de distribución por decisión, perfil por tipo de registro, reglas aplicadas y la tabla de candidatos con filtros (eliminar, archivar, retención legal). El panel *Plan de retención con IA* es el mismo `ai-insights-panel` en modo `retention`: llama a `POST /api/audit/retention/ai-plan`, que solo envía cifras agregadas al proveedor de IA.
+
+## Animaciones
+
+- Cada vista entra con un desplazamiento suave (`.view-host`), las tarjetas aparecen escalonadas y se elevan al pasar el cursor, y las barras de progreso crecen al cargar.
+- `CountUpDirective` (`[appCountUp]`) anima los indicadores hasta su valor con una curva *ease-out*; en pruebas se desactiva con `COUNT_UP_DURATION_MS = 0`.
+- El login tiene un fondo con orbes y cuadrícula animados y el contenido entra escalonado; el ítem activo del menú late suavemente.
+- Todo se desactiva con `prefers-reduced-motion: reduce`.
 
 ## Pruebas y build
 

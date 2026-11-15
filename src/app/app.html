@@ -107,7 +107,7 @@
           </span>
         </div>
         <p class="mt-2 text-[11px] leading-relaxed text-slate-400">
-          {{ store.loading() ? 'Sincronizando con el backend…' : 'Nexo AI · análisis simulado' }}
+          {{ store.loading() ? 'Sincronizando con el backend…' : 'IA: motor de reglas gRPC + recomendaciones con LLM' }}
         </p>
         @if (store.lastSync(); as sync) {
           <p class="mt-1 text-[10px] text-slate-500">Sincronizado · {{ fmt.relative(sync.toISOString()) }}</p>
