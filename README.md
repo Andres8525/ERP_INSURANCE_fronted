@@ -46,6 +46,7 @@ También se puede **crear una cuenta** desde la pestaña *Crear cuenta* (correo 
 | Afiliaciones (stepper) | `POST /api/patients`, `POST /api/patients/{id}/policies`, `POST /api/claims` |
 | Clientes CRM | `GET /api/clients`, `GET /api/clients/{id}/pdf` |
 | Pacientes | `GET/PUT/DELETE /api/patients`, `GET/PUT/DELETE /api/patients/{id}/policies` |
+| Tiempo real | `realtime-gateway`: `POST /api/realtime/lab-jobs`, `GET /api/realtime/lab-status-polling`, `GET /api/realtime/vitals-stream` (SSE), `GET /api/realtime/metrics`, `WS /ws/medical-hub` |
 | Optimización nube (ADMIN/AUDITOR) | `GET /api/audit/retention`, `POST /api/audit/retention/ai-plan` |
 
 ## Estructura
@@ -137,6 +138,20 @@ El panel *Recomendaciones con IA* (`ai-insights-panel.component`) pide a `POST /
 - **Errores**: el backend devuelve `ProblemDetail` con `reason` (`NOT_CONFIGURED`, `NO_CREDITS`, `RATE_LIMITED`…); `aiErrorView` muestra el detalle real y una guía para resolverlo.
 
 `api.models.ts` debe coincidir con los records del backend. El backend omite los campos `null` (`non_null`), por eso esos campos son opcionales (`?`) en TypeScript.
+
+## Tiempo real
+
+La vista *Tiempo real* consume el microservicio `realtime-gateway` (Node.js) con el mismo JWT de la sesión. `environment.realtimeUrl` apunta a `https://erp-realtime-gateway.onrender.com` en producción; en desarrollo `proxy.conf.mjs` envía `/api/realtime` y `/ws` (con `ws: true`) a `REALTIME_TARGET` (`http://localhost:8090`).
+
+| Panel | Cliente (`core/realtime/`) | Comportamiento |
+| --- | --- | --- |
+| Laboratorio y RIPS | `LabPollingService` (`fetch`) | Short polling cada `X-Poll-Interval` (3 s) con `If-None-Match`; cuenta peticiones, `304` y bytes útiles, y se detiene al completar |
+| Signos vitales UCI y farmacia | `VitalsStreamService` (`EventSource`) | Stream SSE filtrado por camas, historia de 60 muestras con sparkline, alarmas, avisos de farmacia, `Last-Event-ID` y reconexiones |
+| Conexión al medical hub | `MedicalHubService` (`WebSocket`) | Token en el subprotocolo `['bearer', token]`, sede y rol clínico, ping de latencia cada 10 s, reconexión con backoff exponencial y jitter, métricas de la réplica y terminales virtuales (ADMIN) |
+| Telemedicina e historia clínica | mismo hub | Chat por sala `tele-…` con indicador de escritura; historia `HC-…` con bloqueo exclusivo, edición guardada a los 600 ms con `baseVersion` y avisos de conflicto |
+| Interconsultas, Código Azul y turnos | mismo hub | Interconsulta por ID de usuario con confirmación de entrega por réplica, banner de Código Azul y resumen del fan-out sumado por réplica |
+
+Para verlo en local: `npm start` con `API_TARGET` y `REALTIME_TARGET`, y el gateway con el mismo `JWT_SECRET` que `insurance-api`. Para probar interconsultas, abre una segunda sesión (otra ventana privada) y copia su ID desde *Conexión al medical hub*.
 
 ## Optimización de nube
 
