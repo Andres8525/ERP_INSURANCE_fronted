@@ -62,8 +62,19 @@
     </div>
   </div>
 
-  <div class="p-4 sm:px-5" aria-live="polite">
-    @if (error(); as e) {
+  <div class="p-4 sm:px-5" aria-live="polite" [attr.aria-busy]="loading()">
+    @if (loading()) {
+      <div class="animate-pulse space-y-3" data-testid="ai-loading">
+        <p class="text-[10px] font-medium text-[#1e3a8a]">Analizando la bandeja con {{ providerName() }}… suele tardar unos segundos.</p>
+        <div class="h-3 w-3/4 rounded bg-slate-100"></div>
+        <div class="h-3 w-1/2 rounded bg-slate-100"></div>
+        <div class="grid gap-2 lg:grid-cols-2">
+          @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+            <div class="h-16 rounded-md border border-slate-100 bg-slate-50"></div>
+          }
+        </div>
+      </div>
+    } @else if (error(); as e) {
       <div class="rounded-md border border-rose-200 bg-rose-50 p-3.5" role="alert">
         <p class="text-[11px] font-semibold text-rose-900">{{ e.message }}</p>
         @if (e.guidance) {

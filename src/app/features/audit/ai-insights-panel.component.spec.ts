@@ -59,10 +59,13 @@ describe('AiInsightsPanelComponent', () => {
 
     const done = component.generate();
     expect(component.loading()).toBe(true);
+    await render();
+    expect(element.querySelector('[data-testid="ai-loading"]')?.textContent).toContain('Analizando la bandeja con Groq');
     http.expectOne((r) => r.url === `${API}/audit/ai/insights` && !r.params.has('refresh')).flush(INSIGHT);
     await done;
     await render();
 
+    expect(element.querySelector('[data-testid="ai-loading"]')).toBeNull();
     expect(element.querySelector('app-ai-report')).not.toBeNull();
     expect(element.querySelector('[data-testid="ai-content"]')).toBeNull();
     expect(element.querySelectorAll('[data-testid="ai-priority"]')).toHaveLength(2);
