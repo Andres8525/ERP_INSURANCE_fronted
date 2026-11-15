@@ -273,8 +273,35 @@ export interface AiStatusResponse {
   model: string;
 }
 
+export type AiRiskLevel = 'ALTO' | 'MEDIO' | 'BAJO';
+
+export interface AiPriority {
+  title: string;
+  severity?: 'Crítica' | 'Revisión' | 'Mixta';
+  recordType?: string;
+  count?: number;
+  risk?: string;
+  action?: string;
+}
+
+export interface AiAction {
+  title: string;
+  owner?: string;
+  detail?: string;
+}
+
+export interface AiReport {
+  summary: string;
+  impact?: string;
+  riskLevel: AiRiskLevel;
+  priorities: AiPriority[];
+  actions: AiAction[];
+  prevention: string[];
+}
+
 export interface AiInsightResponse {
   content: string;
+  report?: AiReport;
   provider: string;
   model: string;
   analyzedAnomalies: number;
