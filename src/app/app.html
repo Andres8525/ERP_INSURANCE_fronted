@@ -189,6 +189,7 @@
           </div>
         }
 
+        <div class="view-host">
         @switch (activeView()) {
           @case ('overview') {
             <app-overview-page (viewChange)="setView($event)" (anomalySelected)="selectedAnomaly.set($event)" />
@@ -243,6 +244,7 @@
             }
           }
         }
+        </div>
       </main>
     </div>
 
@@ -254,7 +256,7 @@
 
     @if (store.notice(); as notice) {
       <div
-        class="fixed bottom-5 right-5 z-[60] max-w-sm rounded-lg border px-4 py-3 text-xs shadow-lg"
+        class="toast-in fixed bottom-5 right-5 z-[60] max-w-sm rounded-lg border px-4 py-3 text-xs shadow-lg"
         [class.border-teal-200]="notice.kind === 'success'"
         [class.bg-teal-50]="notice.kind === 'success'"
         [class.text-teal-900]="notice.kind === 'success'"
