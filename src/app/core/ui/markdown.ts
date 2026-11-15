@@ -14,10 +14,20 @@ function inline(text: string): string {
 type ListKind = 'ul' | 'ol';
 
 const TABLE_ROW = /^\|.*\|$/;
+const RULE = /^(-{3,}|\*{3,}|_{3,})$/;
+const HTML_BREAK = /<br\s*\/?>/gi;
 const TABLE_SEPARATOR = /^:?-{2,}:?$/;
 
 function cells(row: string): string[] {
   return row.slice(1, -1).split('|').map((cell) => cell.trim());
+}
+
+function cellHtml(text: string): string {
+  return text
+    .split(HTML_BREAK)
+    .map((part) => inline(part.trim()))
+    .filter(Boolean)
+    .join('<br>');
 }
 
 function renderTable(rows: string[]): string {
@@ -25,8 +35,8 @@ function renderTable(rows: string[]): string {
   const hasHeader = parsed.length > 1 && parsed[1].every((cell) => TABLE_SEPARATOR.test(cell));
   const header = hasHeader ? parsed[0] : null;
   const body = hasHeader ? parsed.slice(2) : parsed;
-  const head = header ? `<thead><tr>${header.map((cell) => `<th>${inline(cell)}</th>`).join('')}</tr></thead>` : '';
-  const rowsHtml = body.map((row) => `<tr>${row.map((cell) => `<td>${inline(cell)}</td>`).join('')}</tr>`).join('');
+  const head = header ? `<thead><tr>${header.map((value) => `<th>${cellHtml(value)}</th>`).join('')}</tr></thead>` : '';
+  const rowsHtml = body.map((row) => `<tr>${row.map((value) => `<td>${cellHtml(value)}</td>`).join('')}</tr>`).join('');
   return `<div class="md-table"><table>${head}<tbody>${rowsHtml}</tbody></table></div>`;
 }
 
@@ -60,7 +70,12 @@ export function renderMarkdown(markdown: string): string {
     closeList();
   };
 
-  for (const raw of markdown.replace(/\r\n?/g, '\n').split('\n')) {
+  const lines = markdown
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .flatMap((raw) => (TABLE_ROW.test(raw.trim()) ? [raw] : raw.split(HTML_BREAK)));
+
+  for (const raw of lines) {
     const line = raw.trim();
     const heading = /^(#{1,4})\s+(.*)$/.exec(line);
     const bullet = /^[-*•]\s+(.*)$/.exec(line);
@@ -76,6 +91,9 @@ export function renderMarkdown(markdown: string): string {
 
     if (!line) {
       closeBlocks();
+    } else if (RULE.test(line)) {
+      closeBlocks();
+      html.push('<hr>');
     } else if (heading) {
       closeBlocks();
       const level = Math.min(heading[1].length + 2, 6);

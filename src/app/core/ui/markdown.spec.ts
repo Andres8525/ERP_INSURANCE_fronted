@@ -31,6 +31,13 @@ describe('renderMarkdown', () => {
     expect(renderMarkdown('| a | <b>x</b> |')).toContain('<td>&lt;b&gt;x&lt;/b&gt;</td>');
   });
 
+  it('convierte separadores en <hr> y los <br> literales del modelo en saltos de línea', () => {
+    expect(renderMarkdown('Antes\n---\nDespués')).toBe('<p>Antes</p><hr><p>Después</p>');
+    expect(renderMarkdown('• uno <br>• dos<br/>• tres')).toBe('<ul><li>uno</li><li>dos</li><li>tres</li></ul>');
+    expect(renderMarkdown('texto<BR>más')).toBe('<p>texto<br>más</p>');
+    expect(renderMarkdown('| 4 | • a <br>• b |')).toContain('<td>• a<br>• b</td>');
+  });
+
   it('une líneas consecutivas en un párrafo y cierra listas abiertas', () => {
     expect(renderMarkdown('uno\ndos')).toBe('<p>uno<br>dos</p>');
     expect(renderMarkdown('- a\ntexto')).toBe('<ul><li>a</li></ul><p>texto</p>');
