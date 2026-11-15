@@ -76,6 +76,24 @@ describe('LoginPageComponent', () => {
     expect(auth.role()).toBe('AGENT');
   });
 
+  it('no muestra el estado del servidor y oculta la contraseña demo', () => {
+    const fixture = TestBed.createComponent(LoginPageComponent);
+    fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).not.toMatch(/servidor/i);
+    expect(text).not.toContain('NexoDemo2026!');
+    expect(text).toContain('Accesos de demostración');
+  });
+
+  it('rellena las credenciales al elegir un acceso de demostración', () => {
+    component.email.set('');
+    component.password.set('');
+    component.useAccount(component.demoAccounts[1]);
+    expect(component.email()).toBe('auditor@nexo.demo');
+    expect(component.password()).toBe('NexoDemo2026!');
+    expect(component.canSubmit()).toBe(true);
+  });
+
   it('informa si el correo ya está registrado', () => {
     component.setMode('register');
     component.email.set('admin@nexo.demo');
