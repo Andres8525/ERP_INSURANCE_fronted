@@ -46,7 +46,6 @@ También se puede **crear una cuenta** desde la pestaña *Crear cuenta* (correo 
 | Afiliaciones (stepper) | `POST /api/patients`, `POST /api/patients/{id}/policies`, `POST /api/claims` |
 | Clientes CRM | `GET /api/clients`, `GET /api/clients/{id}/pdf` |
 | Pacientes | `GET/PUT/DELETE /api/patients`, `GET/PUT/DELETE /api/patients/{id}/policies` |
-| Tiempo real | `realtime-gateway`: `POST /api/realtime/lab-jobs`, `GET /api/realtime/lab-status-polling`, `GET /api/realtime/vitals-stream` (SSE), `GET /api/realtime/metrics`, `WS /ws/medical-hub` |
 | Optimización nube (ADMIN/AUDITOR) | `GET /api/audit/retention`, `POST /api/audit/retention/ai-plan` |
 
 ## Estructura
@@ -61,9 +60,9 @@ src/
     core/state/          ErpStore: estado compartido con signals (la app es zoneless)
     core/ui/             etiquetas en español, formato y traducción de errores de la API
     core/validation/     reglas de correo, teléfono y fechas compartidas por los formularios
-    core/workers/        Web Worker, Shared Worker, Service Worker y memoria compartida (ver abajo)
+    core/workers/        Service Worker offline de siniestros y catálogos (ver abajo)
     shared/ui/           componentes reutilizables (app-field-error)
-    features/            auth, overview, audit, claims, enrollment, clients, patient, cloud, workers-monitor
+    features/            auth, overview, audit, claims, enrollment, clients, patient, cloud
 ```
 
 Las importaciones entre capas usan alias definidos en `tsconfig.json`: `@core/*`, `@shared/*`, `@features/*` y `@env/*`.
@@ -87,41 +86,12 @@ Las importaciones entre capas usan alias definidos en `tsconfig.json`: `@core/*`
 
 Con los créditos fiscales de la ACA algunos planes quedan en prima cero. La afiliación acepta `0` como prima mensual (solo rechaza valores negativos), lo indica en el formulario y el CRM marca esos clientes con la insignia *Prima $0*.
 
-## Workers y paralelismo (`src/app/core/workers/`)
+## Resiliencia offline (`src/app/core/workers/offline/`)
 
-```text
-core/workers/
-  protocol/   rpc.ts (mensajes tipados con requestId), worker-rpc-client.ts, rpc-server.ts
-  billing/    billing-analytics.worker.ts + núcleo puro (CSV, CIE-10, estadísticas) + servicio
-  session/    session-sync.shared-worker.ts + reductor puro (sala de espera y bloqueos) + servicio
-  offline/    medical-offline.sw.ts (Service Worker) + protocolo + OfflineService
-  vitals/     vital-signs.worker.ts + layout SharedArrayBuffer/Atomics + servicio con fallback
-  worker-status.ts  detección de capacidades (crossOriginIsolated, SharedArrayBuffer, …)
-```
+`medical-offline.sw.ts` es un Service Worker con Cache Storage, IndexedDB y Background Sync: Cache-First para recursos con hash y catálogos CIE-10/medicamentos (`/api/catalogs`), Network-First para la navegación. Sin red, los cambios de estado de siniestros se encolan con su `Idempotency-Key` y se reenvían al volver la conexión. Los datos de pacientes no se guardan en caché.
 
-| Módulo | API del navegador | Uso en el ERP |
-| --- | --- | --- |
-| Analítica de facturación | Web Worker + `postMessage` tipado (request/response con `requestId`, progreso, transferencia del CSV como `ArrayBuffer`) | Procesa 100.000+ registros RIPS: valida y agrupa CIE-10 por capítulo, estadísticas (media, mediana, p95, desviación), servicio, mes, edad y sexo. Si no hay soporte de Workers, se ejecuta en el hilo principal. |
-| Sincronización de sesión | Shared Worker + `MessagePort` | Una sola sala de espera para todas las pestañas (urgentes primero) y bloqueo exclusivo de edición de historias clínicas; las pestañas cerradas liberan sus bloqueos por heartbeat. Sin Shared Worker (p. ej. Chrome Android) funciona solo en la pestaña actual. |
-| Resiliencia offline | Service Worker + Cache Storage + IndexedDB + Background Sync | Cache-First para recursos con hash y catálogos CIE-10/medicamentos (`/api/catalogs`), Network-First para la navegación. Sin red, los cambios de estado de siniestros se encolan con su `Idempotency-Key` y se reenvían al volver la conexión. Los datos de pacientes no se guardan en caché. |
-| Signos vitales | `SharedArrayBuffer` + `Int32Array` + `Atomics.wait/notify/waitAsync` | ECG simulado a 250 Hz: el hilo principal escribe la ventana en memoria compartida y el worker calcula frecuencia cardiaca, picos R y RMS sin serializar. Si `window.crossOriginIsolated !== true`, usa `postMessage` con transferencia. |
-
-La vista **Monitor de workers** (menú *Sistema*) muestra si `crossOriginIsolated` está activo, las capacidades del navegador, un medidor de FPS del hilo principal y un panel para probar cada worker en vivo.
-
-Medido en Chrome con COOP/COEP: 100.000 registros analizados en el worker en ~175 ms con la interfaz a 60 FPS; el monitor de ECG detecta 71,9 lpm para un ritmo de 72; la ventana de 1.000 muestras tarda ~0,07 ms por memoria compartida frente a ~0,2 ms por `postMessage` (≈3× más rápido).
-
-### Cabeceras para `crossOriginIsolated`
-
-`SharedArrayBuffer` solo está disponible con aislamiento entre orígenes:
-
-- `vercel.json`: `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` y `Cross-Origin-Resource-Policy: same-origin` en todas las rutas; `medical-offline.sw.js` se sirve con `Cache-Control: no-cache`.
-- `angular.json` (`ng serve`): las mismas cabeceras COOP/COEP en desarrollo.
-- Recursos de otros orígenes: la API responde con `Cross-Origin-Resource-Policy: cross-origin` y CORS; Google Fonts ya envía CORP.
-
-### Build
-
-- Web Worker y Shared Worker los empaqueta Angular (`new Worker(new URL(...))`, `tsconfig.worker.json`).
 - El Service Worker necesita una URL fija en la raíz: `npm run build:sw` lo valida con `tsc -p tsconfig.sw.json` y lo compila con esbuild a `public/medical-offline.sw.js` (ignorado por git). `npm start` y `npm run build` lo ejecutan automáticamente (`prestart`/`prebuild`), también en Vercel.
+- `vercel.json` sirve `medical-offline.sw.js` con `Cache-Control: no-cache` y añade `Cross-Origin-Opener-Policy` y `Cross-Origin-Resource-Policy: same-origin` en todas las rutas.
 
 ## Auditoría IA con gRPC
 
@@ -139,20 +109,6 @@ El panel *Recomendaciones con IA* (`ai-insights-panel.component`) pide a `POST /
 
 `api.models.ts` debe coincidir con los records del backend. El backend omite los campos `null` (`non_null`), por eso esos campos son opcionales (`?`) en TypeScript.
 
-## Tiempo real
-
-La vista *Tiempo real* consume el microservicio `realtime-gateway` (Node.js) con el mismo JWT de la sesión. `environment.realtimeUrl` apunta a `https://erp-realtime-gateway.onrender.com` en producción; en desarrollo `proxy.conf.mjs` envía `/api/realtime` y `/ws` (con `ws: true`) a `REALTIME_TARGET` (`http://localhost:8090`).
-
-| Panel | Cliente (`core/realtime/`) | Comportamiento |
-| --- | --- | --- |
-| Laboratorio y RIPS | `LabPollingService` (`fetch`) | Short polling cada `X-Poll-Interval` (3 s) con `If-None-Match`; cuenta peticiones, `304` y bytes útiles, y se detiene al completar |
-| Signos vitales UCI y farmacia | `VitalsStreamService` (`EventSource`) | Stream SSE filtrado por camas, historia de 60 muestras con sparkline, alarmas, avisos de farmacia, `Last-Event-ID` y reconexiones |
-| Conexión al medical hub | `MedicalHubService` (`WebSocket`) | Token en el subprotocolo `['bearer', token]`, sede y rol clínico, ping de latencia cada 10 s, reconexión con backoff exponencial y jitter, métricas de la réplica y terminales virtuales (ADMIN) |
-| Telemedicina e historia clínica | mismo hub | Chat por sala `tele-…` con indicador de escritura; historia `HC-…` con bloqueo exclusivo, edición guardada a los 600 ms con `baseVersion` y avisos de conflicto |
-| Interconsultas, Código Azul y turnos | mismo hub | Interconsulta por ID de usuario con confirmación de entrega por réplica, banner de Código Azul y resumen del fan-out sumado por réplica |
-
-Para verlo en local: `npm start` con `API_TARGET` y `REALTIME_TARGET`, y el gateway con el mismo `JWT_SECRET` que `insurance-api`. Para probar interconsultas, abre una segunda sesión (otra ventana privada) y copia su ID desde *Conexión al medical hub*.
-
 ## Optimización de nube
 
 `cloud-archive.component` consume `GET /api/audit/retention`: indicadores (registros perfilados, para archivar, para eliminar, ahorro estimado), barra de distribución por decisión, perfil por tipo de registro, reglas aplicadas y la tabla de candidatos con filtros (eliminar, archivar, retención legal). El panel *Plan de retención con IA* es el mismo `ai-insights-panel` en modo `retention`: llama a `POST /api/audit/retention/ai-plan`, que solo envía cifras agregadas al proveedor de IA.
@@ -162,6 +118,7 @@ Para verlo en local: `npm start` con `API_TARGET` y `REALTIME_TARGET`, y el gate
 - Cada vista entra con un desplazamiento suave (`.view-host`), las tarjetas aparecen escalonadas y se elevan al pasar el cursor, y las barras de progreso crecen al cargar.
 - `CountUpDirective` (`[appCountUp]`) anima los indicadores hasta su valor con una curva *ease-out*; en pruebas se desactiva con `COUNT_UP_DURATION_MS = 0`.
 - El login tiene un fondo con orbes y cuadrícula animados y el contenido entra escalonado; el ítem activo del menú late suavemente.
+- El login no muestra el estado del servidor: la API se despierta en segundo plano al cargar la app y, si el primer acceso tarda, solo aparece *Estamos preparando tu sesión*. Los accesos de demostración están plegados bajo *Accesos de demostración* y rellenan correo y contraseña al elegirlos.
 - Todo se desactiva con `prefers-reduced-motion: reduce`.
 
 ## Pruebas y build
