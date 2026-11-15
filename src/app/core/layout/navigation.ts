@@ -15,6 +15,6 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   { key: 'enrollment', label: 'Afiliaciones', icon: 'users', section: 'GESTIÓN' },
   { key: 'clients', label: 'Clientes CRM', icon: 'card', section: 'GESTIÓN' },
   { key: 'patient', label: 'Pacientes', icon: 'user', section: 'GESTIÓN' },
-  { key: 'cloud', label: 'Optimización nube', icon: 'cloud', section: 'SISTEMA' },
+  { key: 'cloud', label: 'Optimización nube', icon: 'cloud', section: 'SISTEMA', requiresAudit: true },
   { key: 'workers', label: 'Monitor de workers', icon: 'cpu', section: 'SISTEMA' },
 ];
