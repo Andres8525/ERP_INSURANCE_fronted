@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { RetentionCandidate, RetentionCategory, RetentionDecision, RetentionProfile } from '@core/api/api.models';
 import { AuditApi } from '@core/api/audit.api';
 import { apiErrorMessage, Fmt } from '@core/ui/format';
+import { AiInsightsPanelComponent } from '../audit/ai-insights-panel.component';
 
 export type RetentionFilter = 'all' | Exclude<RetentionDecision, 'KEEP'>;
 
@@ -40,6 +41,7 @@ export function formatInactivity(months: number): string {
 
 @Component({
   selector: 'app-cloud-archive',
+  imports: [AiInsightsPanelComponent],
   templateUrl: './cloud-archive.component.html',
 })
 export class CloudArchiveComponent {

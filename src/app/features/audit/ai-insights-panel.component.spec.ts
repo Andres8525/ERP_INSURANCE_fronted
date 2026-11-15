@@ -99,6 +99,19 @@ describe('AiInsightsPanelComponent', () => {
     expect(element.textContent).toContain('Generado');
   });
 
+  it('en modo retención pide el plan de archivo y eliminación', async () => {
+    fixture.componentRef.setInput('kind', 'retention');
+    const element = await connect();
+    expect(element.textContent).toContain('Plan de retención con IA');
+    expect(element.textContent).toContain('cifras agregadas');
+
+    const done = component.generate(true);
+    http.expectOne((r) => r.url === `${API}/audit/retention/ai-plan` && r.params.get('refresh') === 'true').flush(INSIGHT);
+    await done;
+    await render();
+    expect(element.querySelectorAll('[data-testid="ai-priority"]')).toHaveLength(2);
+  });
+
   it('usa el Markdown como respaldo cuando el backend no trae reporte', async () => {
     const element = await connect();
     const done = component.generate();

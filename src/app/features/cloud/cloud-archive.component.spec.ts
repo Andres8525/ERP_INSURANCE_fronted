@@ -60,6 +60,9 @@ describe('CloudArchiveComponent', () => {
     http.expectOne(`${API}/audit/retention`).flush(profile);
     await tick();
     fixture.detectChanges();
+    http.expectOne(`${API}/audit/ai/status`).flush({ enabled: true, provider: 'groq', model: 'openai/gpt-oss-120b' });
+    await tick();
+    fixture.detectChanges();
     return fixture.nativeElement;
   }
 
@@ -76,6 +79,7 @@ describe('CloudArchiveComponent', () => {
       ['KEEP', 24], ['ARCHIVE', 3], ['DELETE', 4], ['LEGAL_HOLD', 4],
     ]);
     expect(element.textContent).not.toContain('1.44');
+    expect(element.querySelector('app-ai-insights-panel')?.textContent).toContain('Plan de retención con IA');
   });
 
   it('filtra los candidatos por decisión', async () => {

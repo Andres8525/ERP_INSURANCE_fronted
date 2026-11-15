@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AiInsightResponse, AiStatusResponse } from '@core/api/api.models';
 import { AuditApi } from '@core/api/audit.api';
@@ -15,6 +15,25 @@ export const AI_MARKDOWN_CLASSES =
   '[&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-2 [&_th]:py-1.5 [&_th]:text-left [&_th]:text-[10px] ' +
   '[&_th]:font-semibold [&_td]:border-b [&_td]:border-slate-100 [&_td]:px-2 [&_td]:py-1.5 [&_td]:align-top [&_td]:text-[10px]';
 
+export type AiPanelKind = 'audit' | 'retention';
+
+const PANEL_TEXT: Record<AiPanelKind, { title: string; description: string; action: string; loading: string; idle: string }> = {
+  audit: {
+    title: 'Recomendaciones con IA',
+    description: 'La IA analiza un resumen anonimizado de las anomalías abiertas: sin nombres, correos, teléfonos ni CRMID.',
+    action: 'Generar recomendaciones',
+    loading: 'Analizando la bandeja con',
+    idle: 'para obtener un diagnóstico, las prioridades y las acciones sugeridas para tu equipo.',
+  },
+  retention: {
+    title: 'Plan de retención con IA',
+    description: 'La IA recibe solo cifras agregadas del perfil (conteos, GB, costos y rangos de inactividad), nunca expedientes individuales.',
+    action: 'Generar plan',
+    loading: 'Preparando el plan de archivo y eliminación con',
+    idle: 'para obtener qué lotes archivar o eliminar primero, con aprobaciones y controles de cumplimiento.',
+  },
+};
+
 @Component({
   selector: 'app-ai-insights-panel',
   imports: [AiReportComponent],
@@ -22,6 +41,8 @@ export const AI_MARKDOWN_CLASSES =
 })
 export class AiInsightsPanelComponent {
   private readonly api = inject(AuditApi);
+  readonly kind = input<AiPanelKind>('audit');
+  readonly text = computed(() => PANEL_TEXT[this.kind()]);
   readonly markdownClasses = AI_MARKDOWN_CLASSES;
   readonly fmt = Fmt;
   readonly copied = signal(false);
@@ -53,7 +74,8 @@ export class AiInsightsPanelComponent {
     this.loading.set(true);
     this.error.set(null);
     try {
-      this.insight.set(await firstValueFrom(this.api.aiInsights(refresh)));
+      const request = this.kind() === 'retention' ? this.api.retentionPlan(refresh) : this.api.aiInsights(refresh);
+      this.insight.set(await firstValueFrom(request));
     } catch (error) {
       this.error.set(aiErrorView(error));
     } finally {

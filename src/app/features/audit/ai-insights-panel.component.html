@@ -1,4 +1,4 @@
-<section class="mt-5 rounded-lg border border-[#c9d6ee] bg-white" aria-labelledby="ai-insights-title">
+<section class="mt-5 rounded-lg border border-[#c9d6ee] bg-white" [attr.aria-labelledby]="'ai-' + kind() + '-title'">
   <div class="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
     <div class="flex min-w-0 items-start gap-3">
       <span class="grid size-9 shrink-0 place-items-center rounded-md bg-[#eaf0fb] text-[#1e3a8a]" aria-hidden="true">
@@ -8,7 +8,7 @@
       </span>
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
-          <h2 id="ai-insights-title" class="text-sm font-semibold text-slate-900">Recomendaciones con IA</h2>
+          <h2 [id]="'ai-' + kind() + '-title'" class="text-sm font-semibold text-slate-900">{{ text().title }}</h2>
           @if (status(); as s) {
             <span
               class="rounded-full border px-2 py-0.5 text-[9px] font-medium"
@@ -25,7 +25,7 @@
           }
         </div>
         <p class="mt-1 text-[10px] text-slate-500">
-          La IA analiza un resumen anonimizado de las anomalías abiertas: sin nombres, correos, teléfonos ni CRMID.
+          {{ text().description }}
         </p>
       </div>
     </div>
@@ -56,7 +56,7 @@
           <span class="size-3 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true"></span>
           Analizando…
         } @else {
-          Generar recomendaciones
+          {{ text().action }}
         }
       </button>
     </div>
@@ -65,7 +65,7 @@
   <div class="p-4 sm:px-5" aria-live="polite" [attr.aria-busy]="loading()">
     @if (loading()) {
       <div class="animate-pulse space-y-3" data-testid="ai-loading">
-        <p class="text-[10px] font-medium text-[#1e3a8a]">Analizando la bandeja con {{ providerName() }}… suele tardar unos segundos.</p>
+        <p class="text-[10px] font-medium text-[#1e3a8a]">{{ text().loading }} {{ providerName() }}… suele tardar unos segundos.</p>
         <div class="h-3 w-3/4 rounded bg-slate-100"></div>
         <div class="h-3 w-1/2 rounded bg-slate-100"></div>
         <div class="grid gap-2 lg:grid-cols-2">
@@ -104,7 +104,7 @@
       </p>
     } @else {
       <p class="text-[11px] text-slate-500">
-        Pulsa <strong>Generar recomendaciones</strong> para obtener un diagnóstico, las prioridades y las acciones sugeridas para tu equipo.
+        Pulsa <strong>{{ text().action }}</strong> {{ text().idle }}
       </p>
     }
   </div>
