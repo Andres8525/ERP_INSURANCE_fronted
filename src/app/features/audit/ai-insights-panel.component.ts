@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AiInsightResponse, AiStatusResponse } from '@core/api/api.models';
 import { AuditApi } from '@core/api/audit.api';
-import { AiErrorView, aiErrorView, aiProviderLabel } from '@core/ui/format';
+import { AiErrorView, aiErrorView, aiProviderLabel, Fmt } from '@core/ui/format';
 import { renderMarkdown } from '@core/ui/markdown';
 import { AiReportComponent } from './ai-report.component';
 
@@ -23,6 +23,8 @@ export const AI_MARKDOWN_CLASSES =
 export class AiInsightsPanelComponent {
   private readonly api = inject(AuditApi);
   readonly markdownClasses = AI_MARKDOWN_CLASSES;
+  readonly fmt = Fmt;
+  readonly copied = signal(false);
 
   readonly status = signal<AiStatusResponse | null>(null);
   readonly insight = signal<AiInsightResponse | null>(null);
@@ -56,6 +58,18 @@ export class AiInsightsPanelComponent {
       this.error.set(aiErrorView(error));
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async copy(): Promise<void> {
+    const insight = this.insight();
+    if (!insight || !navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(insight.content);
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2000);
+    } catch {
+      this.copied.set(false);
     }
   }
 }

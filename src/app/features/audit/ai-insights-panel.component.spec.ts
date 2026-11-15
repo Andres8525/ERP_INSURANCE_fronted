@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AiInsightResponse } from '@core/api/api.models';
 import { environment } from '@env/environment';
 import { AiInsightsPanelComponent } from './ai-insights-panel.component';
@@ -74,6 +74,26 @@ describe('AiInsightsPanelComponent', () => {
     await again;
     await render();
     expect(element.textContent).toContain('Respuesta en caché');
+  });
+
+  it('copia el reporte en Markdown al portapapeles', async () => {
+    const element = await connect();
+    const writeText = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+
+    const done = component.generate();
+    http.expectOne((r) => r.url === `${API}/audit/ai/insights`).flush(INSIGHT);
+    await done;
+    await render();
+
+    const copy = [...element.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Copiar');
+    copy?.click();
+    await tick();
+    await render();
+    expect(writeText).toHaveBeenCalledWith(INSIGHT.content);
+    expect(component.copied()).toBe(true);
+    expect(element.textContent).toContain('Copiado ✓');
+    expect(element.textContent).toContain('Generado');
   });
 
   it('usa el Markdown como respaldo cuando el backend no trae reporte', async () => {
