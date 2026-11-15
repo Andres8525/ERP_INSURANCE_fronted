@@ -21,6 +21,16 @@ describe('renderMarkdown', () => {
     expect(escapeHtml(`"a" & 'b'`)).toBe('&quot;a&quot; &amp; &#39;b&#39;');
   });
 
+  it('convierte tablas Markdown en tablas HTML con cabecera', () => {
+    const html = renderMarkdown('| Severidad | Cantidad |\n|---|:---:|\n| **Crítica** | 4 |\n| Revisión | 3 |\n\nFin');
+    expect(html).toBe(
+      '<div class="md-table"><table><thead><tr><th>Severidad</th><th>Cantidad</th></tr></thead>' +
+        '<tbody><tr><td><strong>Crítica</strong></td><td>4</td></tr><tr><td>Revisión</td><td>3</td></tr></tbody></table></div>' +
+        '<p>Fin</p>',
+    );
+    expect(renderMarkdown('| a | <b>x</b> |')).toContain('<td>&lt;b&gt;x&lt;/b&gt;</td>');
+  });
+
   it('une líneas consecutivas en un párrafo y cierra listas abiertas', () => {
     expect(renderMarkdown('uno\ndos')).toBe('<p>uno<br>dos</p>');
     expect(renderMarkdown('- a\ntexto')).toBe('<ul><li>a</li></ul><p>texto</p>');
