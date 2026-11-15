@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { RetentionProfile } from '@core/api/api.models';
 import { environment } from '@env/environment';
+import { COUNT_UP_DURATION_MS } from '@shared/ui/count-up.directive';
 import { CloudArchiveComponent, formatInactivity, formatUsd } from './cloud-archive.component';
 
 const API = environment.apiUrl;
@@ -47,7 +48,7 @@ describe('CloudArchiveComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CloudArchiveComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: COUNT_UP_DURATION_MS, useValue: 0 }],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(CloudArchiveComponent);
@@ -72,7 +73,7 @@ describe('CloudArchiveComponent', () => {
     expect(element.querySelector('[data-testid="kpi-profiled"]')?.textContent?.trim()).toBe('35');
     expect(element.querySelector('[data-testid="kpi-archive"]')?.textContent?.trim()).toBe('3');
     expect(element.querySelector('[data-testid="kpi-delete"]')?.textContent?.trim()).toBe('4');
-    expect(element.querySelector('[data-testid="kpi-savings"]')?.textContent?.replace(/\s/g, '')).toBe('11.54%');
+    expect(element.querySelector('[data-testid="kpi-savings"]')?.textContent?.replace(/\s/g, '')).toBe('11.5%');
     expect(element.querySelector('[data-testid="retention-rules"]')?.textContent).toContain('Archivar a los 12 meses · eliminar a los 7 años');
     expect(element.querySelectorAll('[data-testid="category-row"]')).toHaveLength(3);
     expect(component.distribution().map((slice) => [slice.decision, slice.count])).toEqual([

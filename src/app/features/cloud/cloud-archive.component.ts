@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { CountUpDirective } from '@shared/ui/count-up.directive';
 import { firstValueFrom } from 'rxjs';
 import { RetentionCandidate, RetentionCategory, RetentionDecision, RetentionProfile } from '@core/api/api.models';
 import { AuditApi } from '@core/api/audit.api';
@@ -41,7 +42,7 @@ export function formatInactivity(months: number): string {
 
 @Component({
   selector: 'app-cloud-archive',
-  imports: [AiInsightsPanelComponent],
+  imports: [AiInsightsPanelComponent, CountUpDirective],
   templateUrl: './cloud-archive.component.html',
 })
 export class CloudArchiveComponent {

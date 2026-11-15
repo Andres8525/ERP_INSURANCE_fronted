@@ -51,7 +51,7 @@
                 ></span>
               </div>
               <p class="mt-3 text-[25px] font-semibold tracking-tight tabular-nums text-slate-900">
-                @if (firstLoad()) { <span class="inline-block h-7 w-16 animate-pulse rounded bg-slate-100 align-middle" aria-label="Cargando"></span> } @else { {{ metrics().active }} }
+                @if (firstLoad()) { <span class="inline-block h-7 w-16 animate-pulse rounded bg-slate-100 align-middle" aria-label="Cargando"></span> } @else { <span [appCountUp]="metrics().active"></span> }
               </p>
               <div class="mt-2 flex items-center gap-1.5 text-[10px]">
                 <span class="font-semibold text-emerald-700">{{ metrics().totalPatients }} registrados</span
@@ -74,7 +74,7 @@
                 ></span>
               </div>
               <p class="mt-3 text-[25px] font-semibold tracking-tight tabular-nums text-slate-900">
-                @if (firstLoad()) { <span class="inline-block h-7 w-16 animate-pulse rounded bg-slate-100 align-middle" aria-label="Cargando"></span> } @else { {{ metrics().pending }} }
+                @if (firstLoad()) { <span class="inline-block h-7 w-16 animate-pulse rounded bg-slate-100 align-middle" aria-label="Cargando"></span> } @else { <span [appCountUp]="metrics().pending"></span> }
               </p>
               <div class="mt-2 flex items-center gap-1.5 text-[10px]">
                 <span class="font-semibold text-teal-700">{{ metrics().eligible }} elegibles ACA</span
@@ -97,7 +97,7 @@
                 ></span>
               </div>
               <p class="mt-3 text-[25px] font-semibold tracking-tight tabular-nums text-slate-900">
-                @if (firstLoad()) { <span class="inline-block h-7 w-16 animate-pulse rounded bg-slate-100 align-middle" aria-label="Cargando"></span> } @else { {{ metrics().activeClaims }} }
+                @if (firstLoad()) { <span class="inline-block h-7 w-16 animate-pulse rounded bg-slate-100 align-middle" aria-label="Cargando"></span> } @else { <span [appCountUp]="metrics().activeClaims"></span> }
               </p>
               <div class="mt-2 flex items-center gap-1.5 text-[10px]">
                 <span class="font-semibold text-amber-700">{{ metrics().highPriority }} prioridad alta</span
@@ -120,7 +120,7 @@
                 ></span>
               </div>
               <p class="mt-3 text-[25px] font-semibold tracking-tight tabular-nums text-slate-900">
-                @if (firstLoad()) { <span class="inline-block h-7 w-16 animate-pulse rounded bg-slate-100 align-middle" aria-label="Cargando"></span> } @else { {{ store.auditSummary()?.open ?? '—' }} }
+                @if (firstLoad()) { <span class="inline-block h-7 w-16 animate-pulse rounded bg-slate-100 align-middle" aria-label="Cargando"></span> } @else if (store.auditSummary(); as summary) { <span [appCountUp]="summary.open"></span> } @else { — }
               </p>
               <div class="mt-2 flex items-center gap-1.5 text-[10px]">
                 <span class="font-semibold text-rose-700">{{ store.auditSummary()?.critical ?? 0 }} críticas</span

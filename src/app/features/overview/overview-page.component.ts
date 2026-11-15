@@ -4,9 +4,11 @@ import { AuthService } from '@core/auth/auth.service';
 import { ErpStore } from '@core/state/erp.store';
 import { Fmt } from '@core/ui/format';
 import { ViewKey } from '@core/layout/navigation';
+import { CountUpDirective } from '@shared/ui/count-up.directive';
 
 @Component({
   selector: 'app-overview-page',
+  imports: [CountUpDirective],
   templateUrl: './overview-page.component.html',
 })
 export class OverviewPageComponent {

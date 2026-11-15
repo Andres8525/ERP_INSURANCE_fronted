@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, output, signal, untracked } from '@angular/core';
+import { CountUpDirective } from '@shared/ui/count-up.directive';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ClientSummary } from '@core/api/api.models';
@@ -38,7 +39,7 @@ export function matchesClient(client: ClientSummary, query: string, filter: Clie
 
 @Component({
   selector: 'app-clients-page',
-  imports: [FormsModule, PdfPreviewComponent],
+  imports: [FormsModule, PdfPreviewComponent, CountUpDirective],
   templateUrl: './clients-page.component.html',
 })
 export class ClientsPageComponent {

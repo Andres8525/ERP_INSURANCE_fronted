@@ -34,17 +34,17 @@
   <div class="grid gap-4 sm:grid-cols-3">
     <article class="rounded-lg border border-rose-200 bg-white p-4">
       <p class="text-[10px] font-medium text-slate-500">Críticas</p>
-      <p class="mt-2 text-2xl font-semibold tabular-nums text-rose-700">{{ store.auditSummary()?.critical ?? '—' }}</p>
+      <p class="mt-2 text-2xl font-semibold tabular-nums text-rose-700">@if (store.auditSummary(); as summary) {<span [appCountUp]="summary.critical"></span>} @else {—}</p>
       <p class="mt-1 text-[10px] text-slate-400">Requieren atención inmediata</p>
     </article>
     <article class="rounded-lg border border-amber-200 bg-white p-4">
       <p class="text-[10px] font-medium text-slate-500">Revisión sugerida</p>
-      <p class="mt-2 text-2xl font-semibold tabular-nums text-amber-700">{{ store.auditSummary()?.review ?? '—' }}</p>
+      <p class="mt-2 text-2xl font-semibold tabular-nums text-amber-700">@if (store.auditSummary(); as summary) {<span [appCountUp]="summary.review"></span>} @else {—}</p>
       <p class="mt-1 text-[10px] text-slate-400">Recomendaciones generadas por IA</p>
     </article>
     <article class="rounded-lg border border-slate-200 bg-white p-4">
       <p class="text-[10px] font-medium text-slate-500">Resueltas este mes</p>
-      <p class="mt-2 text-2xl font-semibold tabular-nums text-teal-700">{{ store.auditSummary()?.resolvedThisMonth ?? '—' }}</p>
+      <p class="mt-2 text-2xl font-semibold tabular-nums text-teal-700">@if (store.auditSummary(); as summary) {<span [appCountUp]="summary.resolvedThisMonth"></span>} @else {—}</p>
       <p class="mt-1 text-[10px] text-slate-400">Archivadas o autocorregidas</p>
     </article>
   </div>
