@@ -1,0 +1,80 @@
+<section class="rounded-lg border border-slate-200 bg-white" aria-labelledby="collab-title">
+  <header class="border-b border-slate-100 px-5 py-4">
+    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">WebSocket · bidireccional</p>
+    <h2 id="collab-title" class="mt-1 text-sm font-semibold text-slate-900">Telemedicina e historia clínica colaborativa</h2>
+  </header>
+
+  <div class="grid gap-5 p-5 lg:grid-cols-2">
+    <div>
+      <p class="text-[11px] font-semibold text-slate-800">Chat clínico en tiempo real</p>
+      <div class="mt-2 flex gap-2">
+        <input class="form-input" name="roomId" [(ngModel)]="roomId" placeholder="tele-consulta-ana" aria-label="Sala de telemedicina" />
+        <button class="btn-secondary h-[38px] shrink-0" [disabled]="!hub.connected()" (click)="join()">{{ joinedRoom() ? 'Cambiar sala' : 'Unirse' }}</button>
+      </div>
+      @if (presence().length) {
+        <p class="mt-1.5 text-[10px] text-slate-500">En la sala: {{ presence().join(', ') }}</p>
+      }
+      <ol class="mt-3 h-56 space-y-2 overflow-y-auto rounded-md border border-slate-100 bg-slate-50/60 p-3" aria-live="polite" data-testid="chat-log">
+        @for (line of chat(); track line.id) {
+          <li class="toast-in max-w-[85%] rounded-lg px-3 py-2 text-[11px]"
+            [class.ml-auto]="line.from.userId === hub.welcome()?.principal?.userId"
+            [class.bg-teal-700]="line.from.userId === hub.welcome()?.principal?.userId"
+            [class.text-white]="line.from.userId === hub.welcome()?.principal?.userId"
+            [class.bg-white]="line.from.userId !== hub.welcome()?.principal?.userId"
+            [class.border]="line.from.userId !== hub.welcome()?.principal?.userId">
+            <p class="text-[9px] opacity-70">{{ line.from.email }} · {{ line.from.clinicalRole }}</p>
+            <p class="mt-0.5">{{ line.text }}</p>
+          </li>
+        } @empty {
+          <li class="text-[10px] text-slate-400">{{ joinedRoom() ? 'Sin mensajes todavía.' : 'Conéctate y únete a una sala (tele-…) para conversar médico ↔ paciente.' }}</li>
+        }
+      </ol>
+      <p class="mt-1 h-4 text-[10px] text-slate-400">{{ typing() ? typing() + ' está escribiendo…' : '' }}</p>
+      <form class="mt-1 flex gap-2" (ngSubmit)="sendMessage()">
+        <input class="form-input" name="draft" [(ngModel)]="draft" (input)="notifyTyping()" [disabled]="!joinedRoom()" placeholder="Escribe un mensaje" maxlength="2000" aria-label="Mensaje" />
+        <button class="btn-primary h-[38px] shrink-0" type="submit" [disabled]="!joinedRoom() || !draft.trim()">Enviar</button>
+      </form>
+    </div>
+
+    <div>
+      <p class="text-[11px] font-semibold text-slate-800">Historia clínica con bloqueo en vivo</p>
+      <div class="mt-2 flex gap-2">
+        <input class="form-input" name="recordId" [(ngModel)]="recordId" placeholder="HC-1001" aria-label="Historia clínica" />
+        <button class="btn-secondary h-[38px] shrink-0" [disabled]="!hub.connected()" (click)="openRecord()">Abrir</button>
+      </div>
+
+      @if (record(); as current) {
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md px-3 py-2 text-[10px]"
+          [class.bg-teal-50]="ownsLock()" [class.text-teal-900]="ownsLock()"
+          [class.bg-amber-50]="lock() && !ownsLock()" [class.text-amber-900]="lock() && !ownsLock()"
+          [class.bg-slate-50]="!lock()" [class.text-slate-600]="!lock()" data-testid="record-lock">
+          <span>
+            {{ current.recordId }} · versión {{ current.version }}
+            @if (lock(); as l) {
+              · {{ ownsLock() ? 'Editando tú' : 'Bloqueada por ' + l.email }}
+            } @else {
+              · Libre
+            }
+          </span>
+          <button class="font-semibold underline-offset-2 hover:underline disabled:opacity-50" [disabled]="!!lock() && !ownsLock()" (click)="toggleLock()">
+            {{ ownsLock() ? 'Liberar' : 'Bloquear para editar' }}
+          </button>
+        </div>
+        @if (notice(); as message) {
+          <p class="mt-2 text-[10px] font-medium text-amber-800" role="status">{{ message }}</p>
+        }
+        <div class="mt-3 space-y-2.5">
+          @for (field of fields; track field) {
+            <label class="form-label">
+              {{ labels[field] }}
+              <textarea class="form-input min-h-14 py-2" [name]="field" [value]="valueOf(field)" [readOnly]="!ownsLock()" (input)="edit(field, $any($event.target).value)" [class.bg-slate-50]="!ownsLock()" rows="2"></textarea>
+            </label>
+          }
+        </div>
+        <p class="mt-2 text-[9px] text-slate-400">Última edición: {{ current.updatedBy ?? 'nadie' }} · los cambios se guardan 0,6 s después de escribir con control de versión.</p>
+      } @else {
+        <p class="mt-3 text-[10px] text-slate-400">Abre una historia (HC-…) en dos pestañas o con dos usuarios para ver el bloqueo exclusivo y las ediciones en vivo.</p>
+      }
+    </div>
+  </div>
+</section>

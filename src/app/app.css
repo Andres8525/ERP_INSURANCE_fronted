@@ -104,3 +104,5 @@
 .login-card { animation-delay: .1s; }
 @keyframes orb-float { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(30px, 24px) scale(1.08); } }
 @keyframes logo-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgb(20 184 166 / 45%); } 50% { box-shadow: 0 0 0 10px rgb(20 184 166 / 0%); } }
+.code-blue-banner { animation: code-blue 1s ease-in-out infinite alternate; }
+@keyframes code-blue { from { background: #1d4ed8; } to { background: #1e3a8a; } }

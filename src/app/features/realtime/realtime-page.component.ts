@@ -1,4 +1,8 @@
 import { Component } from '@angular/core';
+import { MedicalHubService } from '@core/realtime/medical-hub.service';
+import { CareCoordinationPanelComponent } from './care-coordination-panel.component';
+import { ClinicalCollaborationPanelComponent } from './clinical-collaboration-panel.component';
+import { HubConnectionPanelComponent } from './hub-connection-panel.component';
 import { LabPollingPanelComponent } from './lab-polling-panel.component';
 import { VitalsStreamPanelComponent } from './vitals-stream-panel.component';
 
@@ -36,7 +40,14 @@ export const PROTOCOLS: ProtocolCard[] = [
 
 @Component({
   selector: 'app-realtime-page',
-  imports: [LabPollingPanelComponent, VitalsStreamPanelComponent],
+  imports: [
+    LabPollingPanelComponent,
+    VitalsStreamPanelComponent,
+    HubConnectionPanelComponent,
+    ClinicalCollaborationPanelComponent,
+    CareCoordinationPanelComponent,
+  ],
+  providers: [MedicalHubService],
   templateUrl: './realtime-page.component.html',
 })
 export class RealtimePageComponent {

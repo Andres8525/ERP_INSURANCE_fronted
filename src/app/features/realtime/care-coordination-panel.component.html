@@ -1,0 +1,85 @@
+<section class="relative overflow-hidden rounded-lg border border-slate-200 bg-white" aria-labelledby="coordination-title">
+  @if (flashing(); as alert) {
+    <div class="code-blue-banner absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 bg-blue-700 px-5 py-3 text-white" role="alert" data-testid="code-blue-banner">
+      <div>
+        <p class="text-sm font-bold tracking-wide">{{ alert.title }}</p>
+        <p class="text-[10px] text-blue-100">{{ alert.detail }}</p>
+      </div>
+      <button class="rounded border border-white/40 px-2 py-1 text-[10px] font-semibold" (click)="flashing.set(null)">Enterado</button>
+    </div>
+  }
+
+  <header class="border-b border-slate-100 px-5 py-4">
+    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">WebSocket · fan-out y backplane</p>
+    <h2 id="coordination-title" class="mt-1 text-sm font-semibold text-slate-900">Interconsultas, Código Azul y turnos</h2>
+  </header>
+
+  <div class="grid gap-5 p-5 lg:grid-cols-2">
+    <div class="space-y-3">
+      <p class="text-[11px] font-semibold text-slate-800">Interconsulta entre médicos</p>
+      <form class="grid gap-2 sm:grid-cols-2" (ngSubmit)="requestConsult()">
+        <input class="form-input sm:col-span-2" name="toUserId" [(ngModel)]="consult.toUserId" placeholder="ID del médico destino (puede estar en otra réplica)" aria-label="Médico destino" />
+        <input class="form-input" name="specialty" [(ngModel)]="consult.specialty" aria-label="Especialidad" />
+        <select class="form-input" name="priority" [(ngModel)]="consult.priority" aria-label="Prioridad">
+          <option value="URGENT">Urgente</option>
+          <option value="ROUTINE">Rutina</option>
+        </select>
+        <input class="form-input sm:col-span-2" name="message" [(ngModel)]="consult.message" placeholder="Motivo de la interconsulta" maxlength="1000" aria-label="Motivo" />
+        <button class="btn-primary sm:col-span-2 justify-center" type="submit" [disabled]="!hub.connected() || !consult.toUserId.trim() || !consult.message.trim()">Enviar interconsulta</button>
+      </form>
+
+      @for (item of outgoing(); track item.consultId) {
+        <p class="rounded border border-slate-100 px-2.5 py-1.5 text-[10px] text-slate-600" data-testid="consult-outgoing">→ {{ item.toUserId.slice(0, 8) }}… · {{ item.status }}</p>
+      }
+      @for (item of incoming(); track item.consultId) {
+        <article class="toast-in rounded-md border p-3" [class.border-rose-300]="item.priority === 'URGENT'" [class.bg-rose-50]="item.priority === 'URGENT'" [class.border-slate-200]="item.priority !== 'URGENT'" data-testid="consult-incoming">
+          <p class="text-[11px] font-semibold text-slate-900">{{ item.priority === 'URGENT' ? 'URGENTE · ' : '' }}{{ item.specialty }}</p>
+          <p class="mt-0.5 text-[10px] text-slate-600">{{ item.message }}</p>
+          <p class="mt-1 text-[9px] text-slate-400">De {{ item.from.email }} · enviada en {{ item.originInstance }} · entregada por {{ item.deliveredBy }}</p>
+          @if (!item.answered) {
+            <div class="mt-2 flex gap-2">
+              <button class="btn-primary h-7" (click)="respond(item, true)">Aceptar</button>
+              <button class="btn-secondary h-7" (click)="respond(item, false)">Rechazar</button>
+            </div>
+          }
+        </article>
+      }
+    </div>
+
+    <div class="space-y-3">
+      <p class="text-[11px] font-semibold text-slate-800">Alertas masivas</p>
+      <div class="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+        <input class="form-input" name="location" [(ngModel)]="location" aria-label="Ubicación del Código Azul" />
+        <select class="form-input" name="scope" [(ngModel)]="scope" aria-label="Alcance">
+          <option value="sede">Mi sede</option>
+          <option value="all">Todas las sedes</option>
+        </select>
+        <button class="h-[38px] rounded-md bg-blue-700 px-3 text-[11px] font-bold text-white hover:bg-blue-800 disabled:opacity-50" [disabled]="!hub.connected()" (click)="codeBlue()">Código Azul</button>
+      </div>
+      <div class="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+        <input class="form-input" name="ticket" [(ngModel)]="turn.ticket" aria-label="Turno" />
+        <input class="form-input" name="room" [(ngModel)]="turn.room" aria-label="Consultorio" />
+        <button class="btn-secondary h-[38px]" [disabled]="!hub.connected()" (click)="callTurn()">Llamar turno</button>
+      </div>
+
+      @for (summary of reports(); track summary.referenceId) {
+        <div class="rounded-md border border-blue-200 bg-blue-50/60 px-3 py-2 text-[10px] text-blue-900" data-testid="fanout-summary">
+          <strong>{{ summary.event === 'alert.code-blue' ? 'Código Azul' : 'Turno' }}</strong>
+          entregado a {{ summary.delivered }}/{{ summary.recipients }} terminales en {{ summary.batches }} lotes ·
+          {{ summary.instances.length }} réplica(s): {{ summary.instances.join(', ') }} · máx. {{ summary.maxDurationMs }} ms
+        </div>
+      }
+
+      <ul class="space-y-1.5" aria-live="polite">
+        @for (alert of alerts(); track alert.id) {
+          <li class="toast-in flex items-start justify-between gap-2 rounded border px-2.5 py-1.5 text-[10px]" [class.border-blue-200]="alert.kind === 'code-blue'" [class.border-slate-100]="alert.kind === 'turn'">
+            <span><strong class="text-slate-800">{{ alert.title }}</strong> · <span class="text-slate-500">{{ alert.detail }}</span></span>
+            <span class="shrink-0 text-slate-400">{{ alert.originInstance }}</span>
+          </li>
+        } @empty {
+          <li class="text-[10px] text-slate-400">Las alertas de tu sede aparecen aquí al instante, vengan de la réplica que vengan.</li>
+        }
+      </ul>
+    </div>
+  </div>
+</section>

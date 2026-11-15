@@ -29,12 +29,12 @@
 
     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       @for (card of cards(); track card.bedId) {
-        <article class="rounded-md border p-3 transition-colors" [class]="alarmClass(card.state?.latest.alarm)" data-testid="bed-card">
+        <article class="rounded-md border p-3 transition-colors" [class]="alarmClass(card.state?.latest?.alarm)" data-testid="bed-card">
           <div class="flex items-center justify-between">
             <p class="text-[11px] font-semibold text-slate-800">{{ card.bedId }}</p>
-            @if (card.state?.latest.alarm === 'CRITICAL') {
+            @if (card.state?.latest?.alarm === 'CRITICAL') {
               <span class="rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white motion-safe:animate-pulse">CRÍTICO</span>
-            } @else if (card.state?.latest.alarm === 'WARNING') {
+            } @else if (card.state?.latest?.alarm === 'WARNING') {
               <span class="rounded bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">ALERTA</span>
             }
           </div>

@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { AlarmLevel } from '@core/realtime/realtime.models';
-import { VitalsStreamService } from '@core/realtime/vitals-stream.service';
+import { BedState, VitalsStreamService } from '@core/realtime/vitals-stream.service';
 import { sparklinePoints } from './sparkline';
 
 export const ICU_BEDS = ['UCI-01', 'UCI-02', 'UCI-03', 'UCI-04', 'UCI-05', 'UCI-06'];
@@ -16,7 +16,7 @@ export class VitalsStreamPanelComponent {
   readonly selected = signal<ReadonlySet<string>>(new Set(['UCI-01', 'UCI-02', 'UCI-03']));
   readonly cards = computed(() => {
     const states = this.stream.beds();
-    return [...this.selected()].sort().map((bedId) => ({ bedId, state: states[bedId] ?? null }));
+    return [...this.selected()].sort().map((bedId) => ({ bedId, state: (states[bedId] as BedState | undefined) ?? null }));
   });
   readonly points = sparklinePoints;
 
